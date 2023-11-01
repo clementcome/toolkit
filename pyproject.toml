@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "cc-tk"
+name = "clementcome-toolkit"
 version = "0.2.0"
 description = "My data science toolkit."
 authors = ["Clément Côme <clement.come98@gmail.com>"]
