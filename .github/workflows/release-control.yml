@@ -15,10 +15,11 @@ jobs:
                 lowercase_title=$(echo "$title" | tr '[:upper:]' '[:lower:]')
 
                 if [[ "$lowercase_title" =~ (patch|minor|major) ]]; then
-                echo "Title is valid"
+                    echo "Title is valid"
                 else
-                echo "Title is invalid"
-                exit 1
+                    echo "Title is invalid"
+                    exit 1
+                fi
 
 
     check_version:
