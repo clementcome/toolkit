@@ -10,7 +10,7 @@ from pydantic import ConfigDict, validate_call
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def plot_confusion(
     confusion_matrix: pd.DataFrame,
-    fmt: str,
+    fmt: str = "d",
     near_diag: int = 1,
     vrange: Union[Literal["global", "local"], Tuple[float]] = "global",
 ) -> None:
@@ -23,6 +23,7 @@ def plot_confusion(
         The confusion matrix to plot.
     fmt : str
         The format string for the annotations in the heatmap.
+        Default is 'd', which corresponds to integers.
     near_diag : int, optional
         The number of cells near the diagonal to highlight with a different
         color.
