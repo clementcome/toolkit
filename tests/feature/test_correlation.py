@@ -1,5 +1,3 @@
-from abc import ABC, abstractmethod
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -8,15 +6,13 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.estimator_checks import check_estimator
 
-from cc_tk.feature.correlation import CorrelationToTarget
+from cc_tk.feature.correlation import (
+    ClusteringCorrelation,
+    CorrelationToTarget,
+)
 
 
-class SuiteFeatureSelector(ABC):
-    @property
-    @abstractmethod
-    def estimator(self) -> BaseEstimator:
-        pass
-
+class SuiteFeatureSelector:
     @pytest.fixture
     def X_array(self):
         np.random.seed(42)
@@ -37,11 +33,8 @@ class SuiteFeatureSelector(ABC):
 
 
 class TestCorrelationToTarget(SuiteFeatureSelector):
-    @property
-    def estimator(self):
-        if not hasattr(self, "_estimator"):
-            self._estimator = CorrelationToTarget()
-        return self._estimator
+    def setup_method(self):
+        self.estimator = CorrelationToTarget()
 
     def test_plot_correlation_error(self):
         with pytest.raises(NotFittedError):
@@ -52,3 +45,28 @@ class TestCorrelationToTarget(SuiteFeatureSelector):
         self.estimator.fit(X_df, y_series)
         self.estimator.plot_correlation()
         mock_plot.barh.assert_called_once()
+
+
+class SuiteClusteringCorrelation(SuiteFeatureSelector):
+    def test_fit(self, X_df, y_series):
+        self.estimator.fit(X_df, y_series)
+        assert self.estimator.clusters_col_ is not None
+
+    def test_fit_with_constant(self, X_df, y_series):
+        X_df.iloc[:, 0] = 1
+        self.estimator.fit(X_df, y_series)
+        assert self.estimator.clusters_col_ is not None
+
+    def test_transform(self, X_df, y_series):
+        self.estimator.fit(X_df, y_series)
+        self.estimator.transform(X_df)
+
+
+class TestClusteringCorrelationFirst(SuiteClusteringCorrelation):
+    def setup_method(self):
+        self.estimator = ClusteringCorrelation(summary_method="first")
+
+
+class TestClusteringCorrelationPCA(SuiteClusteringCorrelation):
+    def setup_method(self):
+        self.estimator = ClusteringCorrelation(summary_method="pca")
