@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import List, Literal
+from typing import Any, Dict, List, Literal
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -149,6 +149,8 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
         threshold : float, optional
             Correlation threshold to consider that a group of variables
             are all correlated together, by default 0.1
+            0.1 means that all variables in the same cluster have a correlation
+            of less than 0.1
         summary_method : str, optional
             Method to summarize each cluster of variables, implemented methods are:
             - "first" = keep only first variable
@@ -215,11 +217,13 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
                 for cluster in self.clusters_col_
             ]
             self._output_columns = [
-                f"{'-'.join(map(str, cluster))} {i}"
+                [
+                    f"{'-'.join(map(str, cluster))} {i}"
+                    for i in range(pca.n_components_)
+                ]
                 for pca, cluster in zip(
                     self.pca_by_cluster_, self.clusters_col_
                 )
-                for i in range(pca.n_components_)
             ]
 
         return self
@@ -251,26 +255,47 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
             return X_[:, self.mask_selection_]
         elif self.summary_method == "pca":
             check_is_fitted(self, ["pca_by_cluster_"])
-            X_by_cluster = [
-                pd.DataFrame(
-                    pca.transform(X_[:, np.isin(self._columns, cluster)]),
-                    columns=[
-                        f"{'-'.join(map(str, cluster))} {i}"
-                        for i in range(pca.n_components_)
-                    ],
+            X_by_cluster = []
+            for pca, cluster, pca_output_columns in zip(
+                self.pca_by_cluster_, self.clusters_col_, self._output_columns
+            ):
+                assert all(
+                    map(
+                        lambda value: str(value) in pca_output_columns[0],
+                        cluster,
+                    )
                 )
-                for pca, cluster in zip(
-                    self.pca_by_cluster_, self.clusters_col_
+                pca_output = pca.transform(
+                    X_[:, np.isin(self._columns, cluster)]
                 )
-            ]
+                if isinstance(pca_output, pd.DataFrame):
+                    pca_output.columns = pca_output_columns
+                else:
+                    pca_output = pd.DataFrame(
+                        pca_output,
+                        columns=pca_output_columns,
+                    )
+            X_by_cluster.append(pca_output)
             X_transform = pd.concat(X_by_cluster, axis=1)
-            assert (X_transform.columns == self._output_columns).all()
             if isinstance(X, pd.DataFrame):
                 X_transform.index = X.index
                 return X_transform
             return X_transform.values
 
-    def plot_dendro(self, ax: plt.Axes = None):
+    def plot_dendro(self, ax: plt.Axes = None) -> Dict[str, Any]:
+        """
+        Plot dendrogram of the correlation matrix.
+
+        Parameters
+        ----------
+        ax : plt.Axes, optional
+            Axis to plot the dendrogram on, by default None
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dendrogram object
+        """
         self.dendro = hierarchy.dendrogram(
             self._corr_linkage,
             orientation="right",
@@ -280,10 +305,26 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
         )
         return self.dendro
 
-    def plot_correlation_matrix(self, fig=None, ax: plt.Axes = None):
+    def plot_correlation_matrix(
+        self, fig=None, ax: plt.Axes = None
+    ) -> plt.Axes:
+        """
+        Plot correlation matrix of the features.
+
+        Parameters
+        ----------
+        fig : plt.Figure, optional
+            Figure to plot the correlation matrix on, by default None
+        ax : plt.Axes, optional
+            Axis to plot the correlation matrix on, by default None
+
+        Returns
+        -------
+        plt.Axes
+            Axis with the correlation matrix"""
         if ax is None:
-            fig = plt.figure(figsize=(10, 8))
-            ax = fig.add_subplot(1, 1, 1)
+            fig = plt.gcf()
+            ax = plt.gca()
         plot = ax.pcolor(
             abs(self._corr[self.dendro["leaves"], :][:, self.dendro["leaves"]])
         )
