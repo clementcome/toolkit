@@ -1,10 +1,11 @@
 import logging
-from typing import Union
 
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
+
+from cc_tk.util.types import ArrayLike1D, ArrayLike2D
 
 logger = logging.getLogger(__name__)
 
@@ -30,22 +31,22 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
 
     def fit(
         self,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series],
+        X: ArrayLike2D,
+        y: ArrayLike1D,
     ) -> "CorrelationToTarget":
         """
         Fit the transformer to the data.
 
         Parameters
         ----------
-        X : Union[np.ndarray, pd.DataFrame]
+        X : ArrayLike2D
             The features.
-        y : Union[np.ndarray, pd.Series]
+        y : ArrayLike1D
             The target.
         """
-        X, y = check_X_y(X, y, y_numeric=True)
-        self.n_features_in_ = X.shape[1]
-        self._corr = np.corrcoef(X.T, y)[-1, :-1]
+        X_, y = check_X_y(X, y, y_numeric=True)
+        self.n_features_in_ = X_.shape[1]
+        self._corr = np.corrcoef(X_.T, y)[-1, :-1]
         # self.corr = X.corrwith(y)
         self.mask_selection_ = abs(self._corr) > self.threshold
         if self.mask_selection_.sum() == 0:
@@ -56,15 +57,34 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
             )
             self.mask_selection_ = abs(self._corr) == abs(self._corr).max()
         if isinstance(X, pd.DataFrame):
-            self._selected_columns = self._corr[self.mask_selection_].index
+            self._columns = X.columns
         else:
-            self._selected_columns = np.arange(X.shape[1])[
-                self.mask_selection_
-            ]
+            self._columns = np.arange(X_.shape[1])
+        self._selected_columns = self._columns[self.mask_selection_]
 
         return self
 
-    def transform(self, X: pd.DataFrame, y: pd.Series = None) -> pd.DataFrame:
+    def transform(self, X: ArrayLike2D, y: ArrayLike1D = None) -> ArrayLike2D:
+        """Retrieve only the selected columns.
+
+        Parameters
+        ----------
+        X : ArrayLike2D
+            The features.
+        y : ArrayLike1D, optional
+            The target, by default None
+
+        Returns
+        -------
+        ArrayLike2D
+            The selected features.
+
+        Raises
+        ------
+        ValueError
+            If the number of columns in X is different from the number of
+            columns in the training data.
+        """
         check_is_fitted(self, ["mask_selection_", "n_features_in_"])
         X = check_array(X)
         if X.shape[1] != self.n_features_in_:
@@ -74,8 +94,33 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
         return X[:, self.mask_selection_]
 
     def plot_correlation(self):
+        """Plot the correlation of each feature to the target.
+
+        The selected features are highlighted in green, the others in red.
+        The threshold values are indicated with dashed lines.
+        """
         check_is_fitted(self, ["mask_selection_", "n_features_in_"])
-        plot_df = pd.Series(self._corr, name="Correlation").to_frame()
-        plot_df["Selected"] = self.mask_selection_
+        plot_df = pd.DataFrame(
+            {
+                "Correlation": self._corr,
+                "Columns": self._columns,
+                "Selected": self.mask_selection_,
+            }
+        )
         plot_df = plot_df.sort_values("Correlation")
-        plot_df.plot.barh(y="Correlation")
+        ax = plot_df.plot.barh(
+            x="Columns",
+            y="Correlation",
+            color=plot_df["Selected"].map(
+                {True: "tab:green", False: "tab:red"}
+            ),
+        )
+        ax.vlines(
+            [-self.threshold, self.threshold],
+            ymin=-1,
+            ymax=len(plot_df),
+            colors="k",
+            linestyles="dashed",
+        )
+        ax.set_xlabel("Correlation to target")
+        ax.legend().remove()

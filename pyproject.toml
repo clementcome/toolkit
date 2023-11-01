@@ -44,6 +44,10 @@ optional = true
 [tool.poetry.group.doc.dependencies]
 sphinx = "^7.2.6"
 
+[tool.poetry.group.jupyter]
+optional = true
+[tool.poetry.group.jupyter.dependencies]
+jupyter = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core"]
