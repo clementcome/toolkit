@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "clementcome-toolkit"
-version = "0.2.0"
+version = "0.2.1"
 description = "My data science toolkit."
 authors = ["Clément Côme <clement.come98@gmail.com>"]
 readme = "README.md"
