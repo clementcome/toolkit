@@ -18,10 +18,9 @@ repos:
       rev: 5.12.0
       hooks:
           - id: isort
-    - repo: local
+    # Hook for ruff
+    - repo: https://github.com/astral-sh/ruff-pre-commit
+      # Ruff version.
+      rev: v0.1.3
       hooks:
-          - id: pylint
-            name: pylint
-            entry: pylint
-            language: system
-            types: [python]
+          - id: ruff
