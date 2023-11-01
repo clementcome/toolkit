@@ -4,10 +4,10 @@ from typing import Literal, Tuple, Union
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from pydantic import validate_call
+from pydantic import ConfigDict, validate_call
 
 
-@validate_call
+@validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def plot_confusion(
     confusion_matrix: pd.DataFrame,
     fmt: str,
