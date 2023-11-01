@@ -9,21 +9,23 @@ jobs:
     check_title:
         runs-on: ubuntu-latest
         steps:
-            - name: Checkout code
-              uses: actions/checkout@v2
-
             - name: Check title
               run: |
                 title="${{ github.event.pull_request.title }}"
                 lowercase_title=$(echo "$title" | tr '[:upper:]' '[:lower:]')
 
                 if [[ "$lowercase_title" =~ (patch|minor|major) ]]; then
-                    echo "Title is valid"
+                echo "Title is valid"
                 else
-                    echo "Title is invalid"
-                    exit 1
-                fi
+                echo "Title is invalid"
+                exit 1
 
+
+    check_version:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
             - name: Check version
               run: |
                 # Get the version from the current branch
