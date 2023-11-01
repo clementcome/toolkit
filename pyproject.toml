@@ -1,0 +1,55 @@
+[tool.poetry]
+name = "cc-tk"
+version = "0.1.0"
+description = "My data science toolkit."
+authors = ["Clément Côme <clement.come98@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "cc_tk" }]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+pandas = "^2.1.1"
+numpy = "^1.26.1"
+matplotlib = "^3.8.0"
+seaborn = "^0.13.0"
+pydantic = "^2.4.2"
+
+[tool.poetry.group.test]
+optional = true
+[tool.poetry.group.test.dependencies]
+pytest = "^7.4.3"
+pytest-cov = "^4.1.0"
+pytest-mock = "^3.12.0"
+
+[tool.poetry.group.lint]
+optional = true
+[tool.poetry.group.lint.dependencies]
+pylint = "^3.0.2"
+pydoclint = "^0.3.8"
+pydocstyle = "^6.3.0"
+mypy = "^1.6.1"
+
+[tool.poetry.group.dev]
+optional = true
+[tool.poetry.group.dev.dependencies]
+isort = "^5.12.0"
+black = "^23.10.1"
+pre-commit = "^3.5.0"
+
+[tool.poetry.group.doc]
+optional = true
+[tool.poetry.group.doc.dependencies]
+sphinx = "^7.2.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+line_length = 79
+known_first_party = "cc_tk"
+
+[tool.black]
+line-length = 79
