@@ -18,7 +18,8 @@ jobs:
         run: |
           PR_TITLE=$(jq -r .pull_request.title "$GITHUB_EVENT_PATH")
           echo "PR Title: $PR_TITLE"
-          if [[ $PR_TITLE =~ ^(patch|minor|major) ]]; then
+          lowercase_title=$(echo "$PR_TITLE" | tr '[:upper:]' '[:lower:]')
+          if [[ $lowercase_title =~ (patch|minor|major) ]]; then
             echo "Version bump keyword found: ${BASH_REMATCH[0]}"
             echo "bump_version=${BASH_REMATCH[0]}" >> $GITHUB_OUTPUT
           else
