@@ -1,0 +1,41 @@
+name: Release Control
+
+on:
+    pull_request:
+        branches:
+            - main
+
+jobs:
+    check_title:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Check title
+              run: |
+                if [[ "${{ github.event.pull_request.title }}" =~ ^(patch|minor|major)$ ]]; then
+                    echo "Title is valid"
+                else
+                    echo "Title is invalid"
+                    exit 1
+                fi
+
+            - name: Check version
+              run: |
+                # Get the version from the current branch
+                current_version=$(poetry version -s)
+
+                # Checkout the target branch
+                git checkout ${{ github.base_ref }}
+
+                # Get the version from the target branch
+                target_version=$(poetry version -s)
+
+                # Compare the versions
+                if [[ "$current_version" == "$target_version" ]]; then
+                    echo "Version is the same in the current branch and the target branch"
+                else
+                    echo "Version is different in the current branch and the target branch"
+                    exit 1
+                fi
