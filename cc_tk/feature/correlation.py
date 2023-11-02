@@ -1,11 +1,12 @@
+"""Scikit-learn like estimators to deal with correlation in variables."""
 import logging
 from collections import defaultdict
 from typing import Any, Dict, List, Literal
 
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
+from matplotlib import ticker
 from scipy.cluster import hierarchy
 from scipy.spatial.distance import squareform
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -17,10 +18,7 @@ from cc_tk.util.types import ArrayLike1D, ArrayLike2D
 logger = logging.getLogger(__name__)
 
 
-class SelectionException(Exception):
-    pass
-
-
+# pylint: disable=W0201
 class CorrelationToTarget(BaseEstimator, TransformerMixin):
     """
     Select columns with correlation to target above a threshold.
@@ -38,7 +36,7 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
 
     def fit(
         self,
-        X: ArrayLike2D,
+        features: ArrayLike2D,
         y: ArrayLike1D,
     ) -> "CorrelationToTarget":
         """
@@ -46,37 +44,40 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : ArrayLike2D
+        features : ArrayLike2D
             The features.
         y : ArrayLike1D
             The target.
         """
-        X_, y = check_X_y(X, y, y_numeric=True)
-        self.n_features_in_ = X_.shape[1]
-        self._corr = np.corrcoef(X_.T, y)[-1, :-1]
-        # self.corr = X.corrwith(y)
+        features_, y = check_X_y(features, y, y_numeric=True)
+        self.n_features_in_ = features_.shape[1]
+        self._corr = np.corrcoef(features_.T, y)[-1, :-1]
         self.mask_selection_ = abs(self._corr) > self.threshold
         if self.mask_selection_.sum() == 0:
             logger.warning(
-                f"Threshold {self.threshold} is too high, no columns should "
+                "Threshold %s is too high, no columns should "
                 "have been selected. Selecting columns with highest "
-                "correlation."
+                "correlation.",
+                self.threshold,
             )
             self.mask_selection_ = abs(self._corr) == abs(self._corr).max()
-        if isinstance(X, pd.DataFrame):
-            self._columns = X.columns
+        if isinstance(features, pd.DataFrame):
+            self._columns = features.columns
         else:
-            self._columns = np.arange(X_.shape[1])
+            self._columns = np.arange(features_.shape[1])
         self._selected_columns = self._columns[self.mask_selection_]
 
         return self
 
-    def transform(self, X: ArrayLike2D, y: ArrayLike1D = None) -> ArrayLike2D:
+    # pylint: disable=W0613
+    def transform(
+        self, features: ArrayLike2D, y: ArrayLike1D = None
+    ) -> ArrayLike2D:
         """Retrieve only the selected columns.
 
         Parameters
         ----------
-        X : ArrayLike2D
+        features : ArrayLike2D
             The features.
         y : ArrayLike1D, optional
             The target, by default None
@@ -89,16 +90,16 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
         Raises
         ------
         ValueError
-            If the number of columns in X is different from the number of
+            If the number of columns in features is different from the number of
             columns in the training data.
         """
         check_is_fitted(self, ["mask_selection_", "n_features_in_"])
-        X = check_array(X)
-        if X.shape[1] != self.n_features_in_:
+        features = check_array(features)
+        if features.shape[1] != self.n_features_in_:
             raise ValueError(
-                "Shape of input is different from what was seen" "in `fit`"
+                "Shape of input is different from what was seen in `fit`"
             )
-        return X[:, self.mask_selection_]
+        return features[:, self.mask_selection_]
 
     def plot_correlation(self):
         """Plot the correlation of each feature to the target.
@@ -133,7 +134,10 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
         ax.legend().remove()
 
 
+# pylint: disable=W0201
 class ClusteringCorrelation(BaseEstimator, TransformerMixin):
+    """Scikit-learn like estimator to deal with group of correlated features."""
+
     def __init__(
         self,
         threshold: float = 0.1,
@@ -165,25 +169,25 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
         self.summary_method = summary_method
         self.n_variables_by_cluster = n_variables_by_cluster
 
-    def fit(self, X: pd.DataFrame, y: pd.Series = None):
+    def fit(self, features: pd.DataFrame, y: pd.Series = None):
         """
         Fit the feature selection to features
 
         Parameters
         ----------
-        X : pd.DataFrame
+        features : pd.DataFrame
             Features to fit the feature selection to
         y : pd.Series, optional
             Target, by default None
         """
-        X_, y = check_X_y(X, y, ensure_min_features=2)
-        self.n_features_in_ = X_.shape[1]
-        if isinstance(X, pd.DataFrame):
-            self._columns = X.columns
+        features_, y = check_X_y(features, y, ensure_min_features=2)
+        self.n_features_in_ = features_.shape[1]
+        if isinstance(features, pd.DataFrame):
+            self._columns = features.columns
         else:
-            self._columns = np.arange(X_.shape[1])
+            self._columns = np.arange(features_.shape[1])
         # Computing correlation
-        self._corr = np.corrcoef(X_.T)
+        self._corr = np.corrcoef(features_.T)
         self._corr = np.nan_to_num(self._corr)
         # Symmetrizing correlation matrix
         self._corr = (self._corr + self._corr.T) / 2
@@ -213,7 +217,7 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
             self.pca_by_cluster_ = [
                 PCA(
                     n_components=min(len(cluster), self.n_variables_by_cluster)
-                ).fit(X_[:, np.isin(self._columns, cluster)])
+                ).fit(features_[:, np.isin(self._columns, cluster)])
                 for cluster in self.clusters_col_
             ]
             self._output_columns = [
@@ -228,13 +232,17 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X: pd.DataFrame, y: pd.Series = None) -> pd.DataFrame:
+    # pylint: disable=W0613
+    def transform(
+        self, features: pd.DataFrame, y: pd.Series = None
+    ) -> pd.DataFrame:
         """
-        Apply feature selection to DataFrame X and return the transformed variables
+        Apply feature selection to DataFrame features and return the
+        transformed variables
 
         Parameters
         ----------
-        X : pd.DataFrame
+        features : pd.DataFrame
             Features
         y : pd.Series, optional
             Target, by default None
@@ -244,18 +252,18 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
         pd.DataFrame
             Transformed features with feature selection
         """
-        X_ = check_array(X)
+        features_ = check_array(features)
         check_is_fitted(self, ["clusters_col_", "n_features_in_"])
-        if X_.shape[1] != self.n_features_in_:
+        if features_.shape[1] != self.n_features_in_:
             raise ValueError(
-                "Shape of input is different from what was seen" "in `fit`"
+                "Shape of input is different from what was seen in `fit`"
             )
         if self.summary_method == "first":
             check_is_fitted(self, ["mask_selection_"])
-            return X_[:, self.mask_selection_]
-        elif self.summary_method == "pca":
+            return features_[:, self.mask_selection_]
+        if self.summary_method == "pca":
             check_is_fitted(self, ["pca_by_cluster_"])
-            X_by_cluster = []
+            features_by_cluster = []
             for pca, cluster, pca_output_columns in zip(
                 self.pca_by_cluster_, self.clusters_col_, self._output_columns
             ):
@@ -266,7 +274,7 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
                     )
                 )
                 pca_output = pca.transform(
-                    X_[:, np.isin(self._columns, cluster)]
+                    features_[:, np.isin(self._columns, cluster)]
                 )
                 if isinstance(pca_output, pd.DataFrame):
                     pca_output.columns = pca_output_columns
@@ -275,12 +283,13 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
                         pca_output,
                         columns=pca_output_columns,
                     )
-            X_by_cluster.append(pca_output)
-            X_transform = pd.concat(X_by_cluster, axis=1)
-            if isinstance(X, pd.DataFrame):
-                X_transform.index = X.index
-                return X_transform
-            return X_transform.values
+                features_by_cluster.append(pca_output)
+            features_transform = pd.concat(features_by_cluster, axis=1)
+            if isinstance(features, pd.DataFrame):
+                features_transform.index = features.index
+                return features_transform
+            return features_transform.values
+        return features
 
     def plot_dendro(self, ax: plt.Axes = None) -> Dict[str, Any]:
         """
