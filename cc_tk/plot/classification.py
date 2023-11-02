@@ -2,14 +2,15 @@
 from typing import Literal, Tuple, Union
 
 import numpy as np
-import pandas as pd
 import seaborn as sns
 from pydantic import ConfigDict, validate_call
+
+from cc_tk.util.types import ArrayLike2D
 
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def plot_confusion(
-    confusion_matrix: pd.DataFrame,
+    confusion_matrix: ArrayLike2D,
     fmt: str = "d",
     near_diag: int = 1,
     vrange: Union[Literal["global", "local"], Tuple[float]] = "global",
@@ -19,7 +20,7 @@ def plot_confusion(
 
     Parameters:
     -----------
-    confusion_matrix : pd.DataFrame
+    confusion_matrix : ArrayLike2D
         The confusion matrix to plot.
     fmt : str
         The format string for the annotations in the heatmap.
@@ -43,13 +44,11 @@ def plot_confusion(
     n = confusion_matrix.shape[0]
 
     # Create a mask to separate diagonal, near-diagonal and off-diagonal cells
-    if near_diag == 0:
-        mask_neardiag = np.zeros((n, n), dtype=bool)
-    else:
-        mask_neardiag = ~(
-            np.eye(n, k=near_diag, dtype=bool)
-            + np.eye(n, k=-near_diag, dtype=bool)
-        )
+    mask_neardiag = np.zeros((n, n))
+    for i in range(1, near_diag + 1):
+        mask_neardiag += np.eye(n, k=i) + np.eye(n, k=-i)
+
+    mask_neardiag = ~mask_neardiag.astype(bool)
     mask_diag = ~np.eye(n, dtype=bool)
     mask_offdiag = ~(mask_diag & mask_neardiag)
 
