@@ -376,3 +376,198 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
         clusters_col = [list(self._columns[v]) for v in clusters]
 
         return clusters_col
+
+
+class PairwiseCorrelationDrop(BaseEstimator, TransformerMixin):
+    """Scikit-learn like estimator to deal with pair-wise correlation."""
+
+    def __init__(self, threshold: float = 0.9) -> None:
+        """
+        Implements the variable selection based on pair-wise correlation
+        through a scikit-learn transformer explained in
+        https://towardsdatascience.com/are-you-dropping-too-many-correlated-features-d1c96654abe6
+
+        Parameters
+        ----------
+        threshold : float, optional
+            pairwise correlation threshold to consider dropping one of the two
+            variables in the pair, by default 0.9
+        """
+        super().__init__()
+        self.threshold = threshold
+
+    def fit(
+        self, features: ArrayLike2D, y: ArrayLike1D = None
+    ) -> "PairwiseCorrelationDrop":
+        """Fit the transformer to the data.
+
+        Parameters
+        ----------
+        features : ArrayLike2D
+            Features
+        y : ArrayLike1D, optional
+            Target, by default None
+
+        Returns
+        -------
+        PairwiseCorrelationDrop
+            Fitted transformer
+        """
+        features_, y = check_X_y(
+            features, y, ensure_min_features=2, ensure_min_samples=2
+        )
+        self.n_features_in_ = features_.shape[1]
+        self.mask_selection_ = self.compute_mask_selection(
+            features_, self.threshold
+        )
+        if isinstance(features, pd.DataFrame):
+            self._columns = features.columns
+            self._columns_selection = self._columns[self.mask_selection_]
+        return self
+
+    # pylint: disable=W0613
+    def transform(
+        self, features: ArrayLike2D, y: ArrayLike1D = None
+    ) -> ArrayLike2D:
+        """Retrieve only the selected columns.
+
+        Parameters
+        ----------
+        features : ArrayLike2D
+            Features
+        y : ArrayLike1D, optional
+            Target, by default None
+
+        Returns
+        -------
+        ArrayLike2D
+            Selected features
+
+        Raises
+        ------
+        ValueError
+            If the number of columns in features is different from the number of
+            columns in the training data.
+        """
+        features = check_array(features, ensure_min_features=2)
+        check_is_fitted(self, ["mask_selection_", "n_features_in_"])
+        if features.shape[1] != self.n_features_in_:
+            raise ValueError(
+                "Shape of input is different from what was seen in `fit`"
+            )
+        return features[:, self.mask_selection_]
+
+    @classmethod
+    def compute_mask_selection(
+        cls, features: np.ndarray, cut: float = 0.9
+    ) -> np.ndarray:
+        """Computes the mask of variables to keep based on pair-wise correlation.
+
+        Parameters
+        ----------
+        features : np.ndarray
+            Features
+        cut : float, optional
+            Correlation threshold, by default 0.9
+
+        Returns
+        -------
+        np.ndarray
+            Mask of variables to keep
+        """
+        # Get correlation matrix and upper triagle
+        corr_mtx = np.corrcoef(features, rowvar=False)
+        avg_corr = np.mean(corr_mtx, axis=1)
+        up = np.triu(corr_mtx, k=1)
+
+        dropcols = np.zeros(features.shape[1], dtype=bool)
+
+        res = []
+        for row in range(len(up) - 1):
+            col_idx = row + 1
+            for col in range(col_idx, len(up)):
+                if corr_mtx[row, col] > cut:
+                    if avg_corr[row] > avg_corr[col]:
+                        dropcols[row] = True
+                        drop = row
+                    else:
+                        dropcols[col] = True
+                        drop = col
+
+                    step_results = pd.Series(
+                        [
+                            row,
+                            col,
+                            avg_corr[row],
+                            avg_corr[col],
+                            up[row, col],
+                            drop,
+                        ]
+                    )
+                    res.append(step_results)
+
+        mask_selection = np.ones(features.shape[1], dtype=bool)
+        if len(res) > 0:
+            res = pd.concat(res, axis=1).T
+            res.columns = [
+                "v1",
+                "v2",
+                "v1.target",
+                "v2.target",
+                "corr",
+                "drop",
+            ]
+
+            dropcols_indices = cls.compute_drop_indices_from_detailed_steps(
+                res
+            )
+            mask_selection[dropcols_indices] = False
+
+        return mask_selection
+
+    @staticmethod
+    def compute_drop_indices_from_detailed_steps(
+        res: pd.DataFrame,
+    ) -> np.ndarray:
+        """Computes the indices of variables to drop from the detailed steps.
+
+        Parameters
+        ----------
+        res : pd.DataFrame
+            Detailed steps of the pairwise correlation drop
+
+        Returns
+        -------
+        np.ndarray
+            Indices of variables to drop
+        """
+        # All variables with correlation > cutoff
+        all_corr_vars = list(set(res["v1"].tolist() + res["v2"].tolist()))
+
+        # All unique variables in drop column
+        poss_drop = list(set(res["drop"].tolist()))
+
+        # Keep any variable not in drop column
+        keep = list(set(all_corr_vars).difference(set(poss_drop)))
+
+        # Drop any variables in same row as a keep variable
+        p = res[res["v1"].isin(keep) | res["v2"].isin(keep)][["v1", "v2"]]
+        q = list(set(p["v1"].tolist() + p["v2"].tolist()))
+        drop = list(set(q).difference(set(keep)))
+
+        # Remove drop variables from possible drop
+        poss_drop = list(set(poss_drop).difference(set(drop)))
+
+        # subset res dataframe to include possible drop pairs
+        m = res[res["v1"].isin(poss_drop) | res["v2"].isin(poss_drop)][
+            ["v1", "v2", "drop"]
+        ]
+
+        # remove rows that are decided (drop), take set and add to drops
+        more_drop = set(
+            list(m[~m["v1"].isin(drop) & ~m["v2"].isin(drop)]["drop"])
+        )
+        for item in more_drop:
+            drop.append(item)
+
+        return np.array(drop, dtype=int)
