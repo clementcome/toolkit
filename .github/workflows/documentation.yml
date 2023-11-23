@@ -1,7 +1,9 @@
 name: Documentation
 
 on:
-    push
+    push:
+        paths-ignore:
+            - "docs/**"
 
 jobs:
     build:
