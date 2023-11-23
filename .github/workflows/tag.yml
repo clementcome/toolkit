@@ -49,8 +49,8 @@ jobs:
           VERSION_BUMP="${{ steps.check-pr-title.outputs.bump_version }}"
           poetry version "$VERSION_BUMP"
           RELEASE_VERSION=$(poetry version -s)
-          git config --global user.email "your-email@example.com"
-          git config --global user.name "Your Name"
+          git config --global user.email "clement.come98@gmail.com"
+          git config --global user.name "CI/CD"
           git commit -m "Bump version to $RELEASE_VERSION" pyproject.toml
           git push -f origin HEAD:${{ github.base_ref }}
           git tag -a "v$RELEASE_VERSION" -m "Version $RELEASE_VERSION"
