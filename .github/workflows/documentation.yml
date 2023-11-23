@@ -1,0 +1,34 @@
+name: Documentation
+
+on:
+    push
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        env:
+            CI_COMMIT_MESSAGE: Continuous Integration Build Documentation
+            CI_COMMIT_AUTHOR: Continuous Integration
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+            - name: Set up Python 3.10
+              uses: actions/setup-python@v2
+              with:
+                  python-version: 3.10
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install poetry==1.4.2
+                  poetry install --with=docs
+            - name: Build documentation
+              run: |
+                poetry run sphinx-apidoc -o docs cc_tk
+                poetry run sphinx-build -b html docs docs/_build
+            - name: Commit generated documentation
+              run: |
+                git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
+                git config --global user.email "clement.come98@gmail.com"
+                git add docs
+                git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
+                git push

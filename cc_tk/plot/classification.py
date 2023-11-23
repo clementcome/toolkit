@@ -18,8 +18,8 @@ def plot_confusion(
     """
     Plot a confusion matrix with green, blue and red color scales.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     confusion_matrix : ArrayLike2D
         The confusion matrix to plot.
     fmt : str
