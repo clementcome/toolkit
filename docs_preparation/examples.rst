@@ -6,7 +6,7 @@ Example: Plot Confusion
 
 To be finished.
 
-The `plot_confusion` function from the `toolkit.visualization` module can be used to plot a confusion matrix like this
+The `plot_confusion` function from the `cc_tk.plot.classification` module can be used to plot a confusion matrix like this
 
 .. plot::
 
