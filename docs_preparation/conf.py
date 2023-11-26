@@ -30,6 +30,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.githubpages",
     "sphinx.ext.viewcode",
+    "matplotlib.sphinxext.plot_directive",
 ]
 
 templates_path = ["_templates"]
