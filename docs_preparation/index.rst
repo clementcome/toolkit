@@ -3,14 +3,62 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+===================================
 Welcome to Toolkit's documentation!
 ===================================
 
+This is the documentation for my data science Toolkit (`github repo <https://github.com/clementcome/toolkit>`_).
+
+Quickstart
+==========
+
+Install the package with pip:
+
+.. code-block:: bash
+
+    pip install clementcome-toolkit
+
+Import the package and use it:
+
+.. code-block:: python
+
+    import cc_tk
+
+.. note::
+
+    This project is still in development and only a few functionalities are available.
+    Do not hesitate to contact me if you have any questions or suggestions.
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Usage:
+
+    examples
+
+.. plot::
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    x = np.linspace(0, 2*np.pi, 100)
+    y = np.sin(x)
+
+    plt.plot(x, y)
+    plt.show()
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Technical documentation:
 
-   modules
+   cc_tk
+
+Reason behind this project
+==========================
+
+Its first pupose is to reduce boilerplate code and make my life easier when switching between projects.
+
+On the side benefit, it also serves as a learning experience to develop a python package and document it on my own aligned with the best practices.
+
 
 Indices and tables
 ==================
