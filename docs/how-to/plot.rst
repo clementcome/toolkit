@@ -7,7 +7,7 @@ How-to Guide: Plot
 Plot Confusion Matrix
 ---------------------
 
-.. todo::
+.. warning::
 
     To be finished.
 
