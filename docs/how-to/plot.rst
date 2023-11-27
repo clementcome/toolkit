@@ -7,7 +7,9 @@ How-to Guide: Plot
 Plot Confusion Matrix
 ---------------------
 
-To be finished.
+.. todo::
+
+    To be finished.
 
 The `plot_confusion` function from the `cc_tk.plot.classification` module can be used to plot a confusion matrix like this
 
