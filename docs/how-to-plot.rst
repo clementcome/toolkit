@@ -1,8 +1,11 @@
 .. _example_plot_confusion:
 
 =======================
-Example: Plot Confusion
+How-to Guide: Plot
 =======================
+
+Plot Confusion Matrix
+---------------------
 
 To be finished.
 
