@@ -28,8 +28,8 @@ release = "0.3.0"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
-    "sphinx.ext.githubpages",
     "sphinx.ext.viewcode",
+    "sphinx.ext.todo",
     "matplotlib.sphinxext.plot_directive",
 ]
 
