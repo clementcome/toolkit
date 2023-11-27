@@ -33,7 +33,7 @@ Import the package and use it:
     :maxdepth: 2
     :caption: How-to guides
 
-    examples
+    how-to-plot
 
 .. toctree::
    :maxdepth: 2
