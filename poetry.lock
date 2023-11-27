@@ -3470,18 +3470,6 @@ sphinxcontrib-jquery = ">=4,<5"
 dev = ["bump2version", "sphinxcontrib-httpdomain", "transifex-client", "wheel"]
 
 [[package]]
-name = "sphinx-wagtail-theme"
-version = "6.1.1"
-description = "Sphinx Wagtail theme"
-category = "dev"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "sphinx_wagtail_theme-6.1.1-py2.py3-none-any.whl", hash = "sha256:bde22539698830aad42b4fbf6f05283c99000b209dbf8d60a9f7fe5a0ce5e508"},
-    {file = "sphinx_wagtail_theme-6.1.1.tar.gz", hash = "sha256:6a3713116c2e6866ea0c10a02f324d285b9cf0edc318358b4d932cb96e18e85f"},
-]
-
-[[package]]
 name = "sphinxcontrib-applehelp"
 version = "1.0.7"
 description = "sphinxcontrib-applehelp is a Sphinx extension which outputs Apple help books"
@@ -3917,4 +3905,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "95f43855ce32c41d339b2fd9f0ccd253ce289d584acd18729f0c1bf0eaa91b84"
+content-hash = "e4fce11410ae771dcbe367d53f29d832e68f812627f2cfefbc63f8fe4b1c4614"
