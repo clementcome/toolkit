@@ -33,13 +33,19 @@ Import the package and use it:
     :maxdepth: 2
     :caption: How-to guides
 
-    how-to-plot
+    how-to/plot
 
 .. toctree::
    :maxdepth: 2
    :caption: Reference
 
-   cc_tk
+   reference/cc_tk
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Tutorial
+
+    tutorial/classification
 
 Reason behind this project
 ==========================
