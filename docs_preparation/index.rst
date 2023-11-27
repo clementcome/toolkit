@@ -31,13 +31,13 @@ Import the package and use it:
 
 .. toctree::
     :maxdepth: 2
-    :caption: Usage:
+    :caption: How-to guides
 
     examples
 
 .. toctree::
    :maxdepth: 2
-   :caption: Technical documentation:
+   :caption: Reference
 
    cc_tk
 
