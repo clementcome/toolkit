@@ -1,4 +1,4 @@
-"""Defines the schema for the caracterisation module."""
+"""Defines the schema for the relationship module."""
 import inspect
 from enum import Enum, unique
 from functools import wraps
@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 from pandera import Check, DataFrameSchema
 from pydantic import validate_call
+
+from cc_tk.util.types import ArrayLike1D
 
 
 def all_columns_numeric(df):
@@ -58,8 +60,10 @@ def check_series_in_signature(
     for arg_name in arg_names:
         if arg_name not in signature.parameters:
             raise ValueError(f"Argument '{arg_name}' does not exist")
-        elif signature.parameters[arg_name].annotation != pd.Series:
-            raise TypeError(f"Argument '{arg_name}' must be a pd.Series")
+        elif not issubclass(
+            signature.parameters[arg_name].annotation, ArrayLike1D
+        ):
+            raise TypeError(f"Argument '{arg_name}' must be a 1D-array.")
     return signature
 
 

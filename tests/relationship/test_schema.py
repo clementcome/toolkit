@@ -3,8 +3,9 @@ import inspect
 import pandas as pd
 import pandera as pa
 import pytest
+from pydantic import ValidationError
 
-from cc_tk.caracterisation.schema import (
+from cc_tk.relationship.schema import (
     OnlyCategoricalSchema,
     OnlyNumericSchema,
     SeriesType,
@@ -97,6 +98,15 @@ class TestCheckInputTypesDecoration:
 
             @check_input_types(
                 ("arg1", SeriesType.NUMERIC), ("arg3", SeriesType.CATEGORICAL)
+            )
+            def dummy_function(arg1: pd.Series, arg2: pd.Series, arg3: int):
+                pass
+
+    def test_check_input_types_decoration_invalid_series_type(self):
+        with pytest.raises(ValidationError):
+
+            @check_input_types(
+                ("arg1", SeriesType.NUMERIC), ("arg2", "numerical")
             )
             def dummy_function(arg1: pd.Series, arg2: pd.Series, arg3: int):
                 pass
