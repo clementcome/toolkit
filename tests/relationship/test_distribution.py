@@ -2,9 +2,10 @@ import pandas as pd
 import pandera as pa
 import pytest
 
-from cc_tk.caracterisation.distribution import (
+from cc_tk.relationship.distribution import (
     categorical_distribution,
     numeric_distribution,
+    summary_distribution_by_target,
 )
 
 
@@ -63,3 +64,42 @@ class TestCategoricalDistribution:
     ):
         with pytest.raises(pa.errors.SchemaError):
             categorical_distribution(invalid_categorical_dataframe)
+
+
+class TestSummaryDistributionByTarget:
+    @pytest.fixture
+    def features(self):
+        # Dataframe with 2 numeric features and 2 categorical features with
+        # 10 rows
+        return pd.DataFrame(
+            {
+                "num1": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                "num2": [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
+                "cat1": ["a", "b", "c", "a", "b", "c", "a", "b", "c", "a"],
+                "cat2": ["b", "b", "c", "c", "a", "a", "b", "b", "c", "c"],
+            }
+        )
+
+    @pytest.fixture
+    def target(self):
+        # Series with 10 rows
+        return pd.Series([1, 0, 1, 0, 1, 0, 1, 0, 1, 0])
+
+    def test_valid_categorical_dataframe(
+        self, features: pd.DataFrame, target: pd.Series
+    ):
+        summary_numeric, summary_categorical = summary_distribution_by_target(
+            features, target
+        )
+        assert isinstance(summary_numeric, pd.DataFrame)
+        assert isinstance(summary_categorical, pd.DataFrame)
+        assert (
+            summary_numeric.shape[0]
+            == sum(features.columns.str.contains("num")) * target.nunique()
+        )
+
+    def test_invalid_categorical_dataframe(
+        self, invalid_categorical_dataframe
+    ):
+        with pytest.raises(pa.errors.SchemaError):
+            summary_distribution_by_target(invalid_categorical_dataframe)
