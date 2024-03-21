@@ -34,6 +34,7 @@ Import the package and use it:
     :caption: How-to guides
 
     how-to/plot
+    how-to/relationship
 
 .. toctree::
    :maxdepth: 2

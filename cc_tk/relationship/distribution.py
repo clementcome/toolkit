@@ -26,6 +26,8 @@ def numeric_distribution(numeric_features: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         Distribution of the features.
     """
+    if numeric_features.empty:
+        return pd.DataFrame()
     distribution_df = numeric_features.describe().T
     distribution_df.index.name = "Variable"
     distribution_df = distribution_df.reset_index()
@@ -48,6 +50,8 @@ def categorical_distribution(
     pd.DataFrame
         Distribution of the features.
     """
+    if categorical_features.empty:
+        return pd.DataFrame()
     distribution_dict = {}
     for feature in categorical_features.columns:
         distribution_dict[feature] = pd.concat(
@@ -86,9 +90,17 @@ def summary_distribution_by_target(
     """
     # Compute the distribution of numeric features by target group
     numeric_features = features.select_dtypes(include="number")
-    numeric_distribution_df = numeric_features.groupby(target).describe().T
-    numeric_distribution_df.index.name = "Variable"
-    numeric_distribution_df = numeric_distribution_df.reset_index()
+    if numeric_features.empty:
+        numeric_distribution_df = pd.DataFrame()
+    else:
+        numeric_distribution_df = (
+            numeric_features.groupby(target)
+            .describe()
+            .stack(level=0)
+            .reorder_levels([1, 0])
+            .sort_index()
+        )
+        numeric_distribution_df.index.names = ["Variable", "Target"]
 
     # Compute the distribution of categorical features by target group
     categorical_features = features.select_dtypes(exclude="number")
@@ -96,12 +108,23 @@ def summary_distribution_by_target(
     for feature in categorical_features.columns:
         categorical_distribution_dict[feature] = pd.concat(
             (
-                categorical_features[feature].value_counts(),
-                categorical_features[feature].value_counts(normalize=True),
+                categorical_features[feature].groupby(target).value_counts(),
+                categorical_features[feature]
+                .groupby(target)
+                .value_counts(normalize=True),
             ),
             axis=1,
         )
-
-    categorical_distribution_df = pd.concat(categorical_distribution_dict)
+    if categorical_distribution_dict:
+        categorical_distribution_df = pd.concat(
+            categorical_distribution_dict
+        ).sort_index()
+        categorical_distribution_df.index.names = [
+            "Variable",
+            "Target",
+            "Value",
+        ]
+    else:
+        categorical_distribution_df = pd.DataFrame()
 
     return numeric_distribution_df, categorical_distribution_df

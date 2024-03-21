@@ -168,3 +168,42 @@ class TestSignificanceCategoricalCategorical:
         assert len(result.influence) == 8
         assert result.influence.isin(["--", "-", " ", "", "+", "++"]).all()
         assert isinstance(result.statistic, float)
+
+
+class TestSignificanceOutput:
+    def test_significance_property_weak(self):
+        output = SignificanceOutput(
+            pvalue=0.1, influence=pd.Series(), statistic=1.0
+        )
+        assert output.significance == SignificanceEnum.WEAK_VALUE
+
+    def test_significance_property_medium(self):
+        output = SignificanceOutput(
+            pvalue=0.06, influence=pd.Series(), statistic=1.0
+        )
+        assert output.significance == SignificanceEnum.MEDIUM_VALUE
+
+    def test_significance_property_strong(self):
+        output = SignificanceOutput(
+            pvalue=0.01, influence=pd.Series(), statistic=1.0
+        )
+        assert output.significance == SignificanceEnum.STRONG_VALUE
+
+    def test_to_dataframe(self):
+        output = SignificanceOutput(
+            pvalue=0.05, influence=pd.Series(["+", ""]), statistic=1.0
+        )
+        df = output.to_dataframe()
+        assert isinstance(df, pd.DataFrame)
+        pd.testing.assert_frame_equal(
+            df,
+            pd.DataFrame(
+                {
+                    "influence": ["+", ""],
+                    "pvalue": 0.05,
+                    "statistic": 1.0,
+                    "message": "",
+                    "significance": SignificanceEnum.MEDIUM_VALUE,
+                }
+            ),
+        )

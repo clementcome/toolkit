@@ -59,6 +59,20 @@ class SignificanceOutput(BaseModel):
 
         return significance
 
+    def to_dataframe(self) -> pd.DataFrame:
+        """
+        Convert the output to a dataframe
+        """
+        return pd.DataFrame(
+            {
+                "influence": self.influence,
+                "pvalue": self.pvalue,
+                "statistic": self.statistic,
+                "message": self.message,
+                "significance": self.significance.value,
+            }
+        )
+
 
 @check_input_types(
     ("numeric_values_1", SeriesType.NUMERIC),
@@ -144,9 +158,7 @@ def significance_numeric_categorical(
     else:
         # If all the groups are gaussian and have equal variances
         # we use ANOVA test
-        test = stats.f_oneway(
-            *[info["values"] for info in group_info.values()]
-        )
+        test = stats.f_oneway(*[info["values"] for info in group_info.values()])
         message = (
             f"{numeric_values.name} grouped by {categorical_values.name} "
             f"are gaussians and have equal variances. Computing "
@@ -156,9 +168,7 @@ def significance_numeric_categorical(
     statistic = test.statistic
     pvalue = test.pvalue
 
-    mean_by_group = pd.Series(
-        {key: info["mean"] for key, info in group_info.items()}
-    )
+    mean_by_group = pd.Series({key: info["mean"] for key, info in group_info.items()})
     influence = cut_influence(mean_by_group)
 
     output = SignificanceOutput(
