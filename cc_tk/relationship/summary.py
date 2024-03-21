@@ -32,6 +32,51 @@ class SummaryOutput(BaseModel):
 
 
 class RelationshipSummary:
+    """Class for building and summarizing the relationship between features and
+    target variable.
+
+    Parameters
+    ----------
+    features : pd.DataFrame
+        The input features.
+    target : pd.Series
+        The target variable.
+
+    Attributes
+    ----------
+    features : pd.DataFrame
+        The input features.
+    target : pd.Series
+        The target variable.
+    numeric_features : pd.DataFrame
+        The numeric features extracted from the input features.
+    categorical_features : pd.DataFrame
+        The categorical features extracted from the input features.
+    summary_output : Optional[SummaryOutput]
+        The summary output of the relationship summary.
+
+    Methods
+    -------
+    build_summary() -> SummaryOutput:
+        Build the relationship summary.
+    to_excel(path: str) -> None:
+        Write the summary to an Excel file.
+
+    Private Methods
+    ---------------
+    _build_numeric_distribution() -> pd.DataFrame:
+        Build the numeric distribution.
+    _build_categorical_distribution() -> pd.DataFrame:
+        Build the categorical distribution.
+    _build_numeric_significance() -> pd.DataFrame:
+        Build the numeric significance.
+    _build_categorical_significance() -> pd.DataFrame:
+        Build the categorical significance.
+    _build_distribution_by_target() -> Tuple[pd.DataFrame, pd.DataFrame]:
+        Build the distribution by target.
+
+    """
+
     def __init__(self, features: pd.DataFrame, target: pd.Series):
         self.features = features
         self.target = target

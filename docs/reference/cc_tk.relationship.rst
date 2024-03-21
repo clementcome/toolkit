@@ -28,6 +28,14 @@ cc\_tk.relationship.significance module
    :undoc-members:
    :show-inheritance:
 
+cc\_tk.relationship.summary module
+---------------------------------------
+
+.. automodule:: cc_tk.relationship.significance
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 cc\_tk.relationship.utils module
 --------------------------------
 

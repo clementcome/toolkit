@@ -9,6 +9,7 @@ Subpackages
 
    cc_tk.feature
    cc_tk.plot
+   cc_tk.relationship
    cc_tk.util
 
 Module contents
