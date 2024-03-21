@@ -1,8 +1,9 @@
 """Defines the schema for the relationship module."""
 import inspect
+import sys
 from enum import Enum, unique
 from functools import wraps
-from typing import Callable, Tuple
+from typing import Callable, Tuple, get_args
 
 import numpy as np
 import pandas as pd
@@ -32,9 +33,7 @@ class SeriesType(str, Enum):
     CATEGORICAL = "categorical"
 
 
-def check_series_in_signature(
-    func: Callable, *arg_names: str
-) -> inspect.Signature:
+def check_series_in_signature(func: Callable, *arg_names: str) -> inspect.Signature:
     """Checks that the specified arguments are pd.Series.
 
     Parameters
@@ -60,9 +59,10 @@ def check_series_in_signature(
     for arg_name in arg_names:
         if arg_name not in signature.parameters:
             raise ValueError(f"Argument '{arg_name}' does not exist")
-        elif not issubclass(
-            signature.parameters[arg_name].annotation, ArrayLike1D
-        ):
+        elif (
+            sys.version_info >= (3, 10)
+            and not issubclass(signature.parameters[arg_name].annotation, ArrayLike1D)
+        ) or signature.parameters[arg_name].annotation not in get_args(ArrayLike1D):
             raise TypeError(f"Argument '{arg_name}' must be a 1D-array.")
     return signature
 
@@ -105,9 +105,7 @@ def check_input_types(*type_specs: Tuple[str, SeriesType]) -> Callable:
                     expected_type == SeriesType.CATEGORICAL
                     and pd.api.types.is_numeric_dtype(series)
                 ):
-                    raise TypeError(
-                        f"Argument '{arg_name}' must be categorical"
-                    )
+                    raise TypeError(f"Argument '{arg_name}' must be categorical")
 
             return func(*args, **kwargs)
 
@@ -146,9 +144,7 @@ def check_input_index(*arg_names: str) -> Callable:
             first_series_index = series_list[0].index
             for series in series_list[1:]:
                 if not series.index.equals(first_series_index):
-                    raise ValueError(
-                        "All specified Series must have the same index."
-                    )
+                    raise ValueError("All specified Series must have the same index.")
 
             return func(*args, **kwargs)
 
