@@ -31,7 +31,12 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.todo",
     "matplotlib.sphinxext.plot_directive",
+    "nbsphinx",
+    "sphinx_copybutton",
+    "myst_nb",
 ]
+
+myst_enable_extensions = ["amsmath", "colon_fence"]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
