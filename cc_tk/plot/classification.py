@@ -15,8 +15,7 @@ def plot_confusion(
     near_diag: int = 1,
     vrange: Union[Literal["global", "local"], Tuple[float]] = "global",
 ) -> None:
-    """
-    Plot a confusion matrix with green, blue and red color scales.
+    """Plot a confusion matrix with green, blue and red color scales.
 
     Parameters
     ----------
@@ -50,6 +49,7 @@ def plot_confusion(
         >>> import numpy as np
         >>> confusion_matrix = np.array([[15, 3, 1], [2, 10, 0], [0, 0, 5]])
         >>> plot_confusion(confusion_matrix, fmt=".2f")
+
     """
     n = confusion_matrix.shape[0]
 

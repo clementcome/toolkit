@@ -69,15 +69,25 @@ known_first_party = "cc_tk"
 line-length = 79
 
 [tool.ruff]
-exclude = ["tests/**"]
+line-length = 79
+exclude = ["tests/**", "docs/**"]
+select = ["B", "D", "E", "F", "I", "N", "PL", "S", "W"]
 
 [tool.pytest.ini_options]
 addopts = [
-    # "-v",
-    # "--cov=cc_tk",
-    # "--cov-report=xml",
-    # "--cov-report=term",
-    # "--cov-fail-under=70",
+    "-v",
+    "--cov=cc_tk",
+    "--cov-report=xml",
+    "--cov-report=term",
+    "--cov-fail-under=70",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "@abstractmethod",
 ]
 
 [tool.pylint]

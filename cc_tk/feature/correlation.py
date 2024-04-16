@@ -20,17 +20,25 @@ logger = logging.getLogger(__name__)
 
 # pylint: disable=W0201
 class CorrelationToTarget(BaseEstimator, TransformerMixin):
-    """
-    Select columns with correlation to target above a threshold.
+    """Select columns with correlation to target above a threshold.
 
     Parameters
     ----------
     threshold : float, optional
         The threshold for the correlation to the target.
         Default is 0.1.
+
     """
 
     def __init__(self, threshold: float = 0.1) -> None:
+        """Initialize the transformer.
+
+        Parameters
+        ----------
+        threshold : float, optional
+            The threshold for the correlation to the target, by default 0.1.
+
+        """
         super().__init__()
         self.threshold = threshold
 
@@ -39,8 +47,7 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
         features: ArrayLike2D,
         y: ArrayLike1D,
     ) -> "CorrelationToTarget":
-        """
-        Fit the transformer to the data.
+        """Fit the transformer to the data.
 
         Parameters
         ----------
@@ -48,6 +55,7 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
             The features.
         y : ArrayLike1D
             The target.
+
         """
         features_, y = check_X_y(features, y, y_numeric=True)
         self.n_features_in_ = features_.shape[1]
@@ -90,8 +98,9 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
         Raises
         ------
         ValueError
-            If the number of columns in features is different from the number of
-            columns in the training data.
+            If the number of columns in features is different from the number
+            of columns in the training data.
+
         """
         check_is_fitted(self, ["mask_selection_", "n_features_in_"])
         features = check_array(features)
@@ -136,7 +145,7 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
 
 # pylint: disable=W0201
 class ClusteringCorrelation(BaseEstimator, TransformerMixin):
-    """Scikit-learn like estimator to deal with group of correlated features."""
+    """Feature selector based on Clustering of correlations."""
 
     def __init__(
         self,
@@ -144,9 +153,7 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
         summary_method: Literal["first", "pca"] = "first",
         n_variables_by_cluster: int = 1,
     ) -> None:
-        """
-        Initialize the Feature selector based on Clustering of correlations
-        https://kobia.fr/automatiser-la-reduction-des-correlations-par-clustering/
+        """Initialize the Feature selector based on Clustering of correlations.
 
         Parameters
         ----------
@@ -156,22 +163,32 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
             0.1 means that all variables in the same cluster have a correlation
             of less than 0.1
         summary_method : str, optional
-            Method to summarize each cluster of variables, implemented methods are:
+            Method to summarize each cluster of variables,
+            implemented methods are:
             - "first" = keep only first variable
-            - "pca" = performs principal component analysis to keep only the first
-                component
+            - "pca" = performs principal component analysis to keep only the
+                first component
             , by default "first"
         n_variables_by_cluster : int, optional
             Number of variables to extract by cluster, by default 1
+
+        Notes
+        -----
+        See https://kobia.fr/automatiser-la-reduction-des-correlations-par-clustering/
+        for more details.
+
         """
         self.threshold = threshold
-        assert summary_method in ["first", "pca"]
+        if summary_method not in ["first", "pca"]:
+            raise ValueError(
+                "summary_method should be either 'first' or 'pca', "
+                f"got {summary_method}"
+            )
         self.summary_method = summary_method
         self.n_variables_by_cluster = n_variables_by_cluster
 
     def fit(self, features: pd.DataFrame, y: pd.Series = None):
-        """
-        Fit the feature selection to features
+        """Fit the feature selection to features.
 
         Parameters
         ----------
@@ -179,6 +196,7 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
             Features to fit the feature selection to
         y : pd.Series, optional
             Target, by default None
+
         """
         features_, y = check_X_y(features, y, ensure_min_features=2)
         self.n_features_in_ = features_.shape[1]
@@ -236,9 +254,7 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
     def transform(
         self, features: pd.DataFrame, y: pd.Series = None
     ) -> pd.DataFrame:
-        """
-        Apply feature selection to DataFrame features and return the
-        transformed variables
+        """Transform the features with the feature selection.
 
         Parameters
         ----------
@@ -251,6 +267,7 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
         -------
         pd.DataFrame
             Transformed features with feature selection
+
         """
         features_ = check_array(features)
         check_is_fitted(self, ["clusters_col_", "n_features_in_"])
@@ -267,12 +284,15 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
             for pca, cluster, pca_output_columns in zip(
                 self.pca_by_cluster_, self.clusters_col_, self._output_columns
             ):
-                assert all(
+                if not all(
                     map(
                         lambda value: str(value) in pca_output_columns[0],
                         cluster,
                     )
-                )
+                ):
+                    raise ValueError(
+                        f"Columns {cluster} are not in the PCA output columns"
+                    )
                 pca_output = pca.transform(
                     features_[:, np.isin(self._columns, cluster)]
                 )
@@ -292,8 +312,7 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
         return features
 
     def plot_dendro(self, ax: plt.Axes = None) -> Dict[str, Any]:
-        """
-        Plot dendrogram of the correlation matrix.
+        """Plot dendrogram of the correlation matrix.
 
         Parameters
         ----------
@@ -304,6 +323,7 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
         -------
         Dict[str, Any]
             Dendrogram object
+
         """
         self.dendro = hierarchy.dendrogram(
             self._corr_linkage,
@@ -317,8 +337,7 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
     def plot_correlation_matrix(
         self, fig=None, ax: plt.Axes = None
     ) -> plt.Axes:
-        """
-        Plot correlation matrix of the features.
+        """Plot correlation matrix of the features.
 
         Parameters
         ----------
@@ -330,7 +349,9 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
         Returns
         -------
         plt.Axes
-            Axis with the correlation matrix"""
+        Axis with the correlation matrix
+
+        """
         if ax is None:
             fig = plt.gcf()
             ax = plt.gca()
@@ -347,8 +368,7 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
         return ax
 
     def get_clusters(self, linkage: np.ndarray) -> List[List[str]]:
-        """
-        Retrieves the cluster of variables given a specific threshold
+        """Retrieve the cluster of variables given a specific threshold.
 
         Parameters
         ----------
@@ -359,6 +379,7 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
         -------
         List[List[str]]
             List of lists of variable names according to each cluster
+
         """
         # Récupération des clusters à partir de la hiérarchie
         cluster_ids = hierarchy.fcluster(
@@ -382,16 +403,21 @@ class PairwiseCorrelationDrop(BaseEstimator, TransformerMixin):
     """Scikit-learn like estimator to deal with pair-wise correlation."""
 
     def __init__(self, threshold: float = 0.9) -> None:
-        """
-        Implements the variable selection based on pair-wise correlation
-        through a scikit-learn transformer explained in
-        https://towardsdatascience.com/are-you-dropping-too-many-correlated-features-d1c96654abe6
+        """Implement the variable selection based on pair-wise correlation.
+
+        Scikit-learn transformer-like implementation
 
         Parameters
         ----------
         threshold : float, optional
             pairwise correlation threshold to consider dropping one of the two
             variables in the pair, by default 0.9
+
+        Notes
+        -----
+        See https://towardsdatascience.com/are-you-dropping-too-many-correlated-features-d1c96654abe6
+        for more details.
+
         """
         super().__init__()
         self.threshold = threshold
@@ -412,6 +438,7 @@ class PairwiseCorrelationDrop(BaseEstimator, TransformerMixin):
         -------
         PairwiseCorrelationDrop
             Fitted transformer
+
         """
         features_, y = check_X_y(
             features, y, ensure_min_features=2, ensure_min_samples=2
@@ -446,8 +473,9 @@ class PairwiseCorrelationDrop(BaseEstimator, TransformerMixin):
         Raises
         ------
         ValueError
-            If the number of columns in features is different from the number of
-            columns in the training data.
+            If the number of columns in features is different from the number
+            of columns in the training data.
+
         """
         features = check_array(features, ensure_min_features=2)
         check_is_fitted(self, ["mask_selection_", "n_features_in_"])
@@ -461,7 +489,7 @@ class PairwiseCorrelationDrop(BaseEstimator, TransformerMixin):
     def compute_mask_selection(
         cls, features: np.ndarray, cut: float = 0.9
     ) -> np.ndarray:
-        """Computes the mask of variables to keep based on pair-wise correlation.
+        """Compute the mask of variables to keep.
 
         Parameters
         ----------
@@ -474,6 +502,7 @@ class PairwiseCorrelationDrop(BaseEstimator, TransformerMixin):
         -------
         np.ndarray
             Mask of variables to keep
+
         """
         # Get correlation matrix and upper triagle
         corr_mtx = np.corrcoef(features, rowvar=False)
@@ -529,7 +558,7 @@ class PairwiseCorrelationDrop(BaseEstimator, TransformerMixin):
     def compute_drop_indices_from_detailed_steps(
         res: pd.DataFrame,
     ) -> np.ndarray:
-        """Computes the indices of variables to drop from the detailed steps.
+        """Compute the indices of variables to drop from the detailed steps.
 
         Parameters
         ----------
@@ -540,6 +569,7 @@ class PairwiseCorrelationDrop(BaseEstimator, TransformerMixin):
         -------
         np.ndarray
             Indices of variables to drop
+
         """
         # All variables with correlation > cutoff
         all_corr_vars = list(set(res["v1"].tolist() + res["v2"].tolist()))
