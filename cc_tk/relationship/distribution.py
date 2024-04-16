@@ -25,6 +25,7 @@ def numeric_distribution(numeric_features: pd.DataFrame) -> pd.DataFrame:
     -------
     pd.DataFrame
         Distribution of the features.
+
     """
     if numeric_features.empty:
         return pd.DataFrame()
@@ -49,6 +50,7 @@ def categorical_distribution(
     -------
     pd.DataFrame
         Distribution of the features.
+
     """
     if categorical_features.empty:
         return pd.DataFrame()
@@ -87,6 +89,7 @@ def summary_distribution_by_target(
     -------
     numeric_summary, catecorigal_summary : Tuple[pd.DataFrame, pd.DataFrame]
         Distribution of the features by target group.
+
     """
     # Compute the distribution of numeric features by target group
     numeric_features = features.select_dtypes(include="number")

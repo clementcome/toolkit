@@ -7,10 +7,30 @@ import pandas as pd
 from pydantic import BaseModel
 from pydantic.config import ConfigDict
 
-from cc_tk.relationship import distribution, significance
+from cc_tk.relationship import distribution
+from cc_tk.relationship.significance import (
+    SignificanceType,
+    VariableType,
+    get_significance,
+)
 
 
 class SummaryOutput(BaseModel):
+    """Output of the relationship summary.
+
+    Parameters
+    ----------
+    numeric_distribution : pd.DataFrame
+        The numeric distribution.
+    categorical_distribution : pd.DataFrame
+        The categorical distribution.
+    numeric_significance : pd.DataFrame
+        The numeric significance.
+    categorical_significance : pd.DataFrame
+        The categorical significance.
+
+    """
+
     numeric_distribution: pd.DataFrame
     categorical_distribution: pd.DataFrame
     numeric_significance: pd.DataFrame
@@ -25,15 +45,15 @@ class SummaryOutput(BaseModel):
         ----------
         path : str
             Path to the Excel file.
+
         """
         with pd.ExcelWriter(path) as writer:
             for name, df in self.model_dump().items():
-                df.to_excel(writer, sheet_name=name)
+                df.to_excel(writer, sheet_name=name, merge_cells=False)
 
 
 class RelationshipSummary:
-    """Class for building and summarizing the relationship between features and
-    target variable.
+    """Builds the relationship summary.
 
     Parameters
     ----------
@@ -41,6 +61,8 @@ class RelationshipSummary:
         The input features.
     target : pd.Series
         The target variable.
+    significance_type : Optional[SignificanceType]
+        The type of significance to compute, by default "statistical".
 
     Attributes
     ----------
@@ -77,12 +99,45 @@ class RelationshipSummary:
 
     """
 
-    def __init__(self, features: pd.DataFrame, target: pd.Series):
+    def __init__(
+        self,
+        features: pd.DataFrame,
+        target: pd.Series,
+        significance_type: SignificanceType = SignificanceType.STATISTICAL,
+    ):
+        """Initialize the relationship summary.
+
+        Parameters
+        ----------
+        features : pd.DataFrame
+            The input features.
+        target : pd.Series
+            The target variable.
+        significance_type : SignificanceType, optional
+            The type of significance to compute, by default "statistical".
+
+        """
         self.features = features
         self.target = target
-        self.numeric_features = self.features.select_dtypes(include=[np.number])
-        self.categorical_features = self.features.select_dtypes(exclude=[np.number])
+        self.target_type = (
+            VariableType.NUMERIC
+            if pd.api.types.is_numeric_dtype(self.target)
+            else VariableType.CATEGORICAL
+        )
+        self.significance_type = significance_type
+        self.numeric_features = self.features.select_dtypes(
+            include=[np.number]
+        )
+        self.categorical_features = self.features.select_dtypes(
+            exclude=[np.number]
+        )
         self.summary_output: Optional[SummaryOutput] = None
+        self.numeric_significance_function = get_significance(
+            VariableType.NUMERIC, self.target_type, self.significance_type
+        )
+        self.categorical_significance_function = get_significance(
+            VariableType.CATEGORICAL, self.target_type, self.significance_type
+        )
 
     def build_summary(self) -> SummaryOutput:
         """Build the relationship summary.
@@ -91,6 +146,7 @@ class RelationshipSummary:
         -------
         SummaryOutput
             Relationship summary.
+
         """
         (
             numeric_distribution_by_target_class,
@@ -123,6 +179,7 @@ class RelationshipSummary:
         ----------
         path : str
             Path to the Excel file.
+
         """
         if self.summary_output is None:
             self.build_summary()
@@ -140,7 +197,7 @@ class RelationshipSummary:
         if pd.api.types.is_numeric_dtype(self.target):
             significance_df = pd.concat(
                 {
-                    feature_name: significance.significance_numeric_numeric(
+                    feature_name: self.numeric_significance_function(
                         self.features[feature_name], self.target
                     ).to_dataframe()
                     for feature_name in self.numeric_features
@@ -150,7 +207,7 @@ class RelationshipSummary:
             return significance_df
         significance_df = pd.concat(
             {
-                feature_name: significance.significance_numeric_categorical(
+                feature_name: self.numeric_significance_function(
                     self.features[feature_name], self.target
                 ).to_dataframe()
                 for feature_name in self.numeric_features
@@ -165,8 +222,8 @@ class RelationshipSummary:
         if pd.api.types.is_numeric_dtype(self.target):
             significance_df = pd.concat(
                 {
-                    feature_name: significance.significance_numeric_categorical(
-                        self.target, self.features[feature_name]
+                    feature_name: self.categorical_significance_function(
+                        self.features[feature_name], self.target
                     ).to_dataframe()
                     for feature_name in self.categorical_features
                 }
@@ -175,7 +232,7 @@ class RelationshipSummary:
             return significance_df
         significance_df = pd.concat(
             {
-                feature_name: significance.significance_categorical_categorical(
+                feature_name: self.categorical_significance_function(
                     self.features[feature_name], self.target
                 ).to_dataframe()
                 for feature_name in self.categorical_features
@@ -184,12 +241,16 @@ class RelationshipSummary:
         significance_df.index.names = ["Variable", "Target", "Value"]
         return significance_df
 
-    def _build_distribution_by_target(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def _build_distribution_by_target(
+        self,
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         if not pd.api.types.is_numeric_dtype(self.target):
             (
                 numeric_distribution_by_target_class,
                 categorical_distribution_by_target_class,
-            ) = distribution.summary_distribution_by_target(self.features, self.target)
+            ) = distribution.summary_distribution_by_target(
+                self.features, self.target
+            )
             return (
                 numeric_distribution_by_target_class,
                 categorical_distribution_by_target_class,
