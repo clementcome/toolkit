@@ -13,11 +13,37 @@ from pydantic import validate_call
 from cc_tk.util.types import ArrayLike1D
 
 
-def all_columns_numeric(df):
+def all_columns_numeric(df: pd.DataFrame) -> bool:
+    """Check if all columns in a DataFrame are numeric.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The DataFrame to check.
+
+    Returns
+    -------
+    bool
+        True if all columns are numeric, False otherwise.
+
+    """
     return df.select_dtypes(include=[np.number]).shape[1] == df.shape[1]
 
 
-def all_columns_categorical(df):
+def all_columns_categorical(df: pd.DataFrame) -> bool:
+    """Check if all columns in a DataFrame are categorical.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The DataFrame to check.
+
+    Returns
+    -------
+    bool
+        True if all columns are categorical, False otherwise.
+
+    """
     return df.select_dtypes(exclude=[np.number]).shape[1] == df.shape[1]
 
 
@@ -33,8 +59,10 @@ class SeriesType(str, Enum):
     CATEGORICAL = "categorical"
 
 
-def check_series_in_signature(func: Callable, *arg_names: str) -> inspect.Signature:
-    """Checks that the specified arguments are pd.Series.
+def check_series_in_signature(
+    func: Callable, *arg_names: str
+) -> inspect.Signature:
+    """Check that the specified arguments are pd.Series.
 
     Parameters
     ----------
@@ -54,6 +82,7 @@ def check_series_in_signature(func: Callable, *arg_names: str) -> inspect.Signat
         If an argument does not exist.
     TypeError
         If an argument is not a pd.Series.
+
     """
     signature = inspect.signature(func)
     for arg_name in arg_names:
@@ -61,15 +90,19 @@ def check_series_in_signature(func: Callable, *arg_names: str) -> inspect.Signat
             raise ValueError(f"Argument '{arg_name}' does not exist")
         elif (
             sys.version_info >= (3, 10)
-            and not issubclass(signature.parameters[arg_name].annotation, ArrayLike1D)
-        ) or signature.parameters[arg_name].annotation not in get_args(ArrayLike1D):
+            and not issubclass(
+                signature.parameters[arg_name].annotation, ArrayLike1D
+            )
+        ) or signature.parameters[arg_name].annotation not in get_args(
+            ArrayLike1D
+        ):
             raise TypeError(f"Argument '{arg_name}' must be a 1D-array.")
     return signature
 
 
 @validate_call
 def check_input_types(*type_specs: Tuple[str, SeriesType]) -> Callable:
-    """Checks the types of the arguments of the decorated function.
+    """Check the types of the arguments of the decorated function.
 
     Parameters
     ----------
@@ -81,6 +114,7 @@ def check_input_types(*type_specs: Tuple[str, SeriesType]) -> Callable:
     -------
     Callable
         The decorator.
+
     """
 
     def decorator(func: Callable) -> Callable:
@@ -105,7 +139,9 @@ def check_input_types(*type_specs: Tuple[str, SeriesType]) -> Callable:
                     expected_type == SeriesType.CATEGORICAL
                     and pd.api.types.is_numeric_dtype(series)
                 ):
-                    raise TypeError(f"Argument '{arg_name}' must be categorical")
+                    raise TypeError(
+                        f"Argument '{arg_name}' must be categorical"
+                    )
 
             return func(*args, **kwargs)
 
@@ -116,7 +152,7 @@ def check_input_types(*type_specs: Tuple[str, SeriesType]) -> Callable:
 
 @validate_call
 def check_input_index(*arg_names: str) -> Callable:
-    """Checks that the specified arguments have the same index.
+    """Check that the specified arguments have the same index.
 
     Parameters
     ----------
@@ -127,6 +163,7 @@ def check_input_index(*arg_names: str) -> Callable:
     -------
     Callable
         The decorator.
+
     """
 
     def decorator(func):
@@ -144,7 +181,9 @@ def check_input_index(*arg_names: str) -> Callable:
             first_series_index = series_list[0].index
             for series in series_list[1:]:
                 if not series.index.equals(first_series_index):
-                    raise ValueError("All specified Series must have the same index.")
+                    raise ValueError(
+                        "All specified Series must have the same index."
+                    )
 
             return func(*args, **kwargs)
 
