@@ -19,7 +19,7 @@ If you want to work locally with the toolkit, you can clone the repository and e
 
 This project uses mainly poetry, pytest and ruff for development.
 
-If you cloned this project and what to start developing, you can install the package locally within a virtual environment.
+If you cloned this project and want to start developing, you can install the package locally within a virtual environment.
 ```
 poetry install
 ```
