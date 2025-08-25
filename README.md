@@ -13,35 +13,35 @@ pip install clementcome-toolkit
 
 ## Locally work with the toolkit
 
-If you want to work locally with the toolkit, you can clone the repository and execute `pip install --editable .`
+If you want to work locally with the toolkit, you can clone the repository and execute `uv sync` followed by `uv run python -m pip install --editable .`
 
 ## Development
 
-This project uses mainly poetry, pytest and ruff for development.
+This project uses mainly uv, pytest and ruff for development.
 
 If you cloned this project and want to start developing, you can install the package locally within a virtual environment.
 ```
-poetry install
+uv sync
 ```
 by default, it will create a virtual environment if you have no virtual environment activate.
 My current setup is to first create a virtual environment (pyenv is my preferred choice but feel free) and then install the package locally.
 
 For development you can add dependency groups specified in pyproject.toml especially the following ones:
 ```
-poetry install --with dev,lint,test
+uv sync --all-extras
 ```
 
 Perform ruff checks with
 ```
-ruff check
+uv run ruff check
 ```
 
 Perform ruff formatting with
 ```
-ruff format
+uv run ruff format
 ```
 
 Execute tests with pytest
 ```
-pytest
+uv run pytest
 ```
