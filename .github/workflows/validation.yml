@@ -27,7 +27,7 @@ jobs:
 
     - name: Install dependencies and run tests
       run: |
-        uv sync --all-groups
+        uv sync
         uv run pytest tests/plot/ tests/relationship/ -v
 
   lint:
