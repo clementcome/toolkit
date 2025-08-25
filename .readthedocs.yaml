@@ -10,11 +10,11 @@ build:
       # https://docs.astral.sh/uv/getting-started/installation/
       - pip install uv
     post_install:
-      # Install dependencies with 'docs' optional dependency group
-      # https://docs.astral.sh/uv/concepts/dependencies/#optional-dependencies
+      # Install dependencies with 'docs' dependency group
+      # https://docs.astral.sh/uv/concepts/projects/dependencies/#dependency-groups
       # VIRTUAL_ENV needs to be set manually for now.
       # See https://github.com/readthedocs/readthedocs.org/pull/11152/
-      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH uv sync --extra docs
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH uv sync --group docs
 
 sphinx:
   configuration: docs/conf.py

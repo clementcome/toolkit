@@ -38,7 +38,7 @@ dependencies = [
     "openpyxl>=3.1.2",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 test = [
     "pytest>=7.4.3",
     "pytest-cov>=4.1.0",
@@ -52,6 +52,8 @@ lint = [
     "ruff>=0.1.3",
 ]
 dev = [
+    {include-group = "lint"},
+    {include-group = "test"},
     "isort>=5.12.0",
     "black>=23.10.1",
     "pre-commit>=3.5.0",
