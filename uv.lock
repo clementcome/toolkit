@@ -496,21 +496,6 @@ test = [
     { name = "pytest-mock" },
 ]
 
-[package.dev-dependencies]
-dev = [
-    { name = "black" },
-    { name = "isort" },
-    { name = "mypy" },
-    { name = "pre-commit" },
-    { name = "pydoclint" },
-    { name = "pydocstyle" },
-    { name = "pylint" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "pytest-mock" },
-    { name = "ruff" },
-]
-
 [package.metadata]
 requires-dist = [
     { name = "black", marker = "extra == 'dev'", specifier = ">=23.10.1" },
@@ -542,21 +527,6 @@ requires-dist = [
     { name = "sphinx-rtd-theme", marker = "extra == 'docs'", specifier = ">=1.3.0" },
 ]
 provides-extras = ["test", "lint", "dev", "docs", "jupyter"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "black", specifier = ">=23.10.1" },
-    { name = "isort", specifier = ">=5.12.0" },
-    { name = "mypy", specifier = ">=1.6.1" },
-    { name = "pre-commit", specifier = ">=3.5.0" },
-    { name = "pydoclint", specifier = ">=0.3.8" },
-    { name = "pydocstyle", specifier = ">=6.3.0" },
-    { name = "pylint", specifier = ">=3.0.2" },
-    { name = "pytest", specifier = ">=7.4.3" },
-    { name = "pytest-cov", specifier = ">=4.1.0" },
-    { name = "pytest-mock", specifier = ">=3.12.0" },
-    { name = "ruff", specifier = ">=0.1.3" },
-]
 
 [[package]]
 name = "click"

@@ -13,7 +13,7 @@ pip install clementcome-toolkit
 
 ## Locally work with the toolkit
 
-If you want to work locally with the toolkit, you can clone the repository and execute `uv sync` followed by `uv run python -m pip install --editable .`
+If you want to work locally with the toolkit, you can clone the repository and execute `uv sync`
 
 ## Development
 
