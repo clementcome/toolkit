@@ -28,7 +28,7 @@ My current setup is to first create a virtual environment (pyenv is my preferred
 
 For development you can add dependency groups specified in pyproject.toml especially the following ones:
 ```
-uv sync --all-extras
+uv sync --all-groups
 ```
 
 Perform ruff checks with
