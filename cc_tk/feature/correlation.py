@@ -1,4 +1,5 @@
 """Scikit-learn like estimators to deal with correlation in variables."""
+
 import logging
 from collections import defaultdict
 from typing import Any, Dict, List, Literal

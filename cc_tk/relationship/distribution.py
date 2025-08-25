@@ -1,4 +1,5 @@
 """Module for computing distribution of data."""
+
 from typing import Tuple
 
 import pandas as pd

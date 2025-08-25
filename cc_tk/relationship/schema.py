@@ -1,4 +1,5 @@
 """Defines the schema for the relationship module."""
+
 import inspect
 import sys
 from enum import Enum, unique

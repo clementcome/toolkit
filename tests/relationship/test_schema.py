@@ -105,18 +105,14 @@ class TestCheckInputTypesDecoration:
     def test_check_input_types_decoration_invalid_series_type(self):
         with pytest.raises(ValidationError):
 
-            @check_input_types(
-                ("arg1", SeriesType.NUMERIC), ("arg2", "numerical")
-            )
+            @check_input_types(("arg1", SeriesType.NUMERIC), ("arg2", "numerical"))
             def dummy_function(arg1: pd.Series, arg2: pd.Series, arg3: int):
                 pass
 
 
 class TestCheckInputTypes:
     @staticmethod
-    @check_input_types(
-        ("arg1", SeriesType.NUMERIC), ("arg2", SeriesType.CATEGORICAL)
-    )
+    @check_input_types(("arg1", SeriesType.NUMERIC), ("arg2", SeriesType.CATEGORICAL))
     def dummy_function(arg1: pd.Series, arg2: pd.Series):
         pass
 
@@ -157,9 +153,7 @@ class TestCheckInputIndex:
     def series_with_different_index(self):
         index1 = pd.Index([1, 2, 3])
         index2 = pd.Index([4, 5, 6])
-        return pd.Series([1, 2, 3], index=index1), pd.Series(
-            [4, 5, 6], index=index2
-        )
+        return pd.Series([1, 2, 3], index=index1), pd.Series([4, 5, 6], index=index2)
 
     def test_check_input_index_valid(self, series_with_same_index):
         self.dummy_function(series_with_same_index, series_with_same_index)

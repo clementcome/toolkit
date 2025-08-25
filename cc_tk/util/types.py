@@ -1,4 +1,5 @@
 """Type definitions for cc_tk."""
+
 from typing import Union
 
 import numpy as np

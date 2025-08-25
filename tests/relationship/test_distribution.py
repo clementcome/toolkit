@@ -38,11 +38,8 @@ class TestNumericDistribution:
     def test_invalid_dataframe(self, invalid_dataframe):
         with pytest.raises(pa.errors.SchemaError):
             numeric_distribution(invalid_dataframe)
-    
-    
-    def test_empty_numeric_dataframe(
-        self
-    ):
+
+    def test_empty_numeric_dataframe(self):
         actual = numeric_distribution(pd.DataFrame())
         assert isinstance(actual, pd.DataFrame)
         assert actual.empty
@@ -68,15 +65,11 @@ class TestCategoricalDistribution:
             "proportion",
         }
 
-    def test_invalid_categorical_dataframe(
-        self, invalid_categorical_dataframe
-    ):
+    def test_invalid_categorical_dataframe(self, invalid_categorical_dataframe):
         with pytest.raises(pa.errors.SchemaError):
             categorical_distribution(invalid_categorical_dataframe)
-    
-    def test_empty_categorical_dataframe(
-        self
-    ):
+
+    def test_empty_categorical_dataframe(self):
         actual = categorical_distribution(pd.DataFrame())
         assert isinstance(actual, pd.DataFrame)
         assert actual.empty
@@ -92,45 +85,55 @@ class TestSummaryDistributionByTarget:
         assert isinstance(summary_numeric, pd.DataFrame)
         assert isinstance(summary_categorical, pd.DataFrame)
         assert summary_numeric.shape[0] == (
-            sum(features.columns.str.contains("num"))
-            * target_categorical.nunique()
+            sum(features.columns.str.contains("num")) * target_categorical.nunique()
         )
-        pd.testing.assert_index_equal(summary_numeric.index, pd.MultiIndex.from_tuples([
-            ["num1", 0],
-            ["num1", 1],
-            ["num2", 0],
-            ["num2", 1],
-        ],names=["Variable", "Target"]))
-        pd.testing.assert_index_equal(summary_numeric.columns, pd.Index(["count","mean","std","min","25%","50%","75%","max"]))
+        pd.testing.assert_index_equal(
+            summary_numeric.index,
+            pd.MultiIndex.from_tuples(
+                [
+                    ["num1", 0],
+                    ["num1", 1],
+                    ["num2", 0],
+                    ["num2", 1],
+                ],
+                names=["Variable", "Target"],
+            ),
+        )
+        pd.testing.assert_index_equal(
+            summary_numeric.columns,
+            pd.Index(["count", "mean", "std", "min", "25%", "50%", "75%", "max"]),
+        )
         assert summary_categorical.shape[0] == (
-            sum(
-                features.loc[:, features.columns.str.contains("cat")].nunique()
-            )
+            sum(features.loc[:, features.columns.str.contains("cat")].nunique())
             * target_categorical.nunique()
         )
-        pd.testing.assert_index_equal(summary_categorical.columns, pd.Index(["count", "proportion"]))
-        pd.testing.assert_index_equal(summary_categorical.index, pd.MultiIndex.from_tuples([
-            ["cat1", 0, "a"],
-            ["cat1", 0, "b"],
-            ["cat1", 0, "c"],
-            ["cat1", 1, "a"],
-            ["cat1", 1, "b"],
-            ["cat1", 1, "c"],
-            ["cat2", 0, "a"],
-            ["cat2", 0, "b"],
-            ["cat2", 0, "c"],
-            ["cat2", 1, "a"],
-            ["cat2", 1, "b"],
-            ["cat2", 1, "c"],
-        ], names=["Variable", "Target", "Value"]))
+        pd.testing.assert_index_equal(
+            summary_categorical.columns, pd.Index(["count", "proportion"])
+        )
+        pd.testing.assert_index_equal(
+            summary_categorical.index,
+            pd.MultiIndex.from_tuples(
+                [
+                    ["cat1", 0, "a"],
+                    ["cat1", 0, "b"],
+                    ["cat1", 0, "c"],
+                    ["cat1", 1, "a"],
+                    ["cat1", 1, "b"],
+                    ["cat1", 1, "c"],
+                    ["cat2", 0, "a"],
+                    ["cat2", 0, "b"],
+                    ["cat2", 0, "c"],
+                    ["cat2", 1, "a"],
+                    ["cat2", 1, "b"],
+                    ["cat2", 1, "c"],
+                ],
+                names=["Variable", "Target", "Value"],
+            ),
+        )
 
-    def test_invalid_target(
-        self, features: pd.DataFrame, target_categorical: pd.Series
-    ):
+    def test_invalid_target(self, features: pd.DataFrame, target_categorical: pd.Series):
         with pytest.raises(TypeError):
-            summary_distribution_by_target(
-                features, target_categorical.astype(float)
-            )
+            summary_distribution_by_target(features, target_categorical.astype(float))
 
     def test_only_categorical_features(
         self, features: pd.DataFrame, target_categorical: pd.Series

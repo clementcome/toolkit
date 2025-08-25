@@ -1,4 +1,5 @@
 """`relationship` module is dedicated to testing statistical relationship."""
+
 from cc_tk.relationship.significance import (
     get_significance,  # noqa: F401
 )
