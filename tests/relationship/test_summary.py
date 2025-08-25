@@ -7,9 +7,7 @@ from cc_tk.relationship import distribution, significance
 
 
 class TestSummaryOutput:
-    def test_to_excel_writes_correct_sheets(
-        self, mocker: MockerFixture, tmp_path
-    ):
+    def test_to_excel_writes_correct_sheets(self, mocker: MockerFixture, tmp_path):
         # Given
         # Create a SummaryOutput instance
         summary = SummaryOutput(
@@ -50,9 +48,7 @@ class TestSummaryOutput:
 
         # Assert that the mock writer's write method was called with the correct arguments
         for sheet_name, df in summary.model_dump().items():
-            pd.testing.assert_frame_equal(
-                written_data[sheet_name], df.reset_index()
-            )
+            pd.testing.assert_frame_equal(written_data[sheet_name], df.reset_index())
 
 
 class TestRelationshipSummary:
@@ -121,9 +117,7 @@ class TestRelationshipSummary:
         relationship_summary = RelationshipSummary(features, target_categorical)
 
         # When
-        numeric_distribution = (
-            relationship_summary._build_numeric_distribution()
-        )
+        numeric_distribution = relationship_summary._build_numeric_distribution()
 
         # Then
         expected_numeric_distribution = distribution.numeric_distribution(
@@ -138,19 +132,13 @@ class TestRelationshipSummary:
         relationship_summary = RelationshipSummary(features, target_categorical)
 
         # When
-        categorical_distribution = (
-            relationship_summary._build_categorical_distribution()
-        )
+        categorical_distribution = relationship_summary._build_categorical_distribution()
 
         # Then
-        expected_categorical_distribution = (
-            distribution.categorical_distribution(
-                relationship_summary.categorical_features
-            )
+        expected_categorical_distribution = distribution.categorical_distribution(
+            relationship_summary.categorical_features
         )
-        assert categorical_distribution.equals(
-            expected_categorical_distribution
-        )
+        assert categorical_distribution.equals(expected_categorical_distribution)
 
     def test__build_numeric_significance_with_categorical_target(
         self, features: pd.DataFrame, target_categorical: pd.Series
@@ -159,14 +147,21 @@ class TestRelationshipSummary:
         relationship_summary = RelationshipSummary(features, target_categorical)
 
         # When
-        numeric_significance = (
-            relationship_summary._build_numeric_significance()
-        )
+        numeric_significance = relationship_summary._build_numeric_significance()
 
         # Then
         assert isinstance(numeric_significance, pd.DataFrame)
-        pd.testing.assert_index_equal(numeric_significance.index, pd.MultiIndex.from_tuples([["num1", 0],["num1", 1],["num2", 0],["num2", 1]], names=["Variable", "Target"]))
-        pd.testing.assert_index_equal(numeric_significance.columns, pd.Index(["influence", "pvalue", "statistic", "message", "significance"]))
+        pd.testing.assert_index_equal(
+            numeric_significance.index,
+            pd.MultiIndex.from_tuples(
+                [["num1", 0], ["num1", 1], ["num2", 0], ["num2", 1]],
+                names=["Variable", "Target"],
+            ),
+        )
+        pd.testing.assert_index_equal(
+            numeric_significance.columns,
+            pd.Index(["influence", "pvalue", "statistic", "message", "significance"]),
+        )
 
     def test__build_numeric_significance_with_numeric_target(
         self, features: pd.DataFrame, target_numeric: pd.Series
@@ -175,15 +170,17 @@ class TestRelationshipSummary:
         relationship_summary = RelationshipSummary(features, target_numeric)
 
         # When
-        numeric_significance = (
-            relationship_summary._build_numeric_significance()
-        )
+        numeric_significance = relationship_summary._build_numeric_significance()
 
         # Then
         assert isinstance(numeric_significance, pd.DataFrame)
-        pd.testing.assert_index_equal(numeric_significance.index, pd.Index(["num1", "num2"], name="Variable"))
-        pd.testing.assert_index_equal(numeric_significance.columns, pd.Index(["influence", "pvalue", "statistic", "message", "significance"]))
-
+        pd.testing.assert_index_equal(
+            numeric_significance.index, pd.Index(["num1", "num2"], name="Variable")
+        )
+        pd.testing.assert_index_equal(
+            numeric_significance.columns,
+            pd.Index(["influence", "pvalue", "statistic", "message", "significance"]),
+        )
 
     def test__build_numeric_significance_empty(
         self, features: pd.DataFrame, target_numeric: pd.Series
@@ -194,9 +191,7 @@ class TestRelationshipSummary:
         )
 
         # When
-        numeric_significance = (
-            relationship_summary._build_numeric_significance()
-        )
+        numeric_significance = relationship_summary._build_numeric_significance()
 
         # Then
         assert isinstance(numeric_significance, pd.DataFrame)
@@ -209,27 +204,34 @@ class TestRelationshipSummary:
         relationship_summary = RelationshipSummary(features, target_categorical)
 
         # When
-        categorical_significance = (
-            relationship_summary._build_categorical_significance()
-        )
+        categorical_significance = relationship_summary._build_categorical_significance()
 
         # Then
         assert isinstance(categorical_significance, pd.DataFrame)
-        pd.testing.assert_index_equal(categorical_significance.index, pd.MultiIndex.from_tuples([
-            ["cat1", 0, "a"],
-            ["cat1", 0, "b"],
-            ["cat1", 0, "c"],
-            ["cat1", 1, "a"],
-            ["cat1", 1, "b"],
-            ["cat1", 1, "c"],
-            ["cat2", 0, "a"],
-            ["cat2", 0, "b"],
-            ["cat2", 0, "c"],
-            ["cat2", 1, "a"],
-            ["cat2", 1, "b"],
-            ["cat2", 1, "c"],
-        ], names=["Variable", "Target", "Value"]))
-        pd.testing.assert_index_equal(categorical_significance.columns, pd.Index(["influence", "pvalue", "statistic", "message", "significance"]))
+        pd.testing.assert_index_equal(
+            categorical_significance.index,
+            pd.MultiIndex.from_tuples(
+                [
+                    ["cat1", 0, "a"],
+                    ["cat1", 0, "b"],
+                    ["cat1", 0, "c"],
+                    ["cat1", 1, "a"],
+                    ["cat1", 1, "b"],
+                    ["cat1", 1, "c"],
+                    ["cat2", 0, "a"],
+                    ["cat2", 0, "b"],
+                    ["cat2", 0, "c"],
+                    ["cat2", 1, "a"],
+                    ["cat2", 1, "b"],
+                    ["cat2", 1, "c"],
+                ],
+                names=["Variable", "Target", "Value"],
+            ),
+        )
+        pd.testing.assert_index_equal(
+            categorical_significance.columns,
+            pd.Index(["influence", "pvalue", "statistic", "message", "significance"]),
+        )
 
     def test__build_categorical_significance_with_numeric_target(
         self, features: pd.DataFrame, target_numeric: pd.Series
@@ -238,21 +240,28 @@ class TestRelationshipSummary:
         relationship_summary = RelationshipSummary(features, target_numeric)
 
         # When
-        categorical_significance = (
-            relationship_summary._build_categorical_significance()
-        )
+        categorical_significance = relationship_summary._build_categorical_significance()
 
         # Then
         assert isinstance(categorical_significance, pd.DataFrame)
-        pd.testing.assert_index_equal(categorical_significance.index, pd.MultiIndex.from_tuples([
-            ["cat1", "a"],
-            ["cat1", "b"],
-            ["cat1", "c"],
-            ["cat2", "a"],
-            ["cat2", "b"],
-            ["cat2", "c"],
-        ], names=["Variable", "Value"]))
-        pd.testing.assert_index_equal(categorical_significance.columns, pd.Index(["influence", "pvalue", "statistic", "message", "significance"]))
+        pd.testing.assert_index_equal(
+            categorical_significance.index,
+            pd.MultiIndex.from_tuples(
+                [
+                    ["cat1", "a"],
+                    ["cat1", "b"],
+                    ["cat1", "c"],
+                    ["cat2", "a"],
+                    ["cat2", "b"],
+                    ["cat2", "c"],
+                ],
+                names=["Variable", "Value"],
+            ),
+        )
+        pd.testing.assert_index_equal(
+            categorical_significance.columns,
+            pd.Index(["influence", "pvalue", "statistic", "message", "significance"]),
+        )
 
     def test__build_categorical_significance_empty(
         self, features: pd.DataFrame, target_numeric: pd.Series
@@ -263,9 +272,7 @@ class TestRelationshipSummary:
         )
 
         # When
-        categorical_significance = (
-            relationship_summary._build_categorical_significance()
-        )
+        categorical_significance = relationship_summary._build_categorical_significance()
 
         # Then
         assert isinstance(categorical_significance, pd.DataFrame)
@@ -302,9 +309,7 @@ class TestRelationshipSummary:
         (
             expected_numeric_distribution_by_target_class,
             expected_categorical_distribution_by_target_class,
-        ) = distribution.summary_distribution_by_target(
-            features, target_categorical
-        )
+        ) = distribution.summary_distribution_by_target(features, target_categorical)
         pd.testing.assert_frame_equal(
             distribution_by_target_categorical[0],
             expected_numeric_distribution_by_target_class,

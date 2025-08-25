@@ -1,4 +1,5 @@
 """Classification plots."""
+
 from typing import Literal, Tuple, Union
 
 import numpy as np

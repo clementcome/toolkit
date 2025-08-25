@@ -69,6 +69,4 @@ class TestClusteringCorrelationFirst(SuiteClusteringCorrelation):
 
 class TestClusteringCorrelationPCA(SuiteClusteringCorrelation):
     def setup_method(self):
-        self.estimator = ClusteringCorrelation(
-            summary_method="pca", threshold=0.9
-        )
+        self.estimator = ClusteringCorrelation(summary_method="pca", threshold=0.9)

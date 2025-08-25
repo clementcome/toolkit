@@ -1,4 +1,5 @@
 """Significance functions for different input types and significance types."""
+
 from typing import Literal, overload
 
 from pydantic import validate_call
@@ -56,8 +57,7 @@ def get_significance(
     feature_type: Literal[VariableType.NUMERIC],
     target_type: Literal[VariableType.NUMERIC],
     significance_type: SignificanceType,
-) -> SignificanceNumericNumeric:
-    ...  # pragma: no cover
+) -> SignificanceNumericNumeric: ...  # pragma: no cover
 
 
 @overload
@@ -65,8 +65,7 @@ def get_significance(
     feature_type: Literal[VariableType.NUMERIC],
     target_type: Literal[VariableType.CATEGORICAL],
     significance_type: SignificanceType,
-) -> SignificanceNumericCategorical:
-    ...  # pragma: no cover
+) -> SignificanceNumericCategorical: ...  # pragma: no cover
 
 
 @overload
@@ -74,8 +73,7 @@ def get_significance(
     feature_type: Literal[VariableType.CATEGORICAL],
     target_type: Literal[VariableType.NUMERIC],
     significance_type: SignificanceType,
-) -> SignificanceCategoricalNumeric:
-    ...  # pragma: no cover
+) -> SignificanceCategoricalNumeric: ...  # pragma: no cover
 
 
 @overload
@@ -83,8 +81,7 @@ def get_significance(
     feature_type: Literal[VariableType.CATEGORICAL],
     target_type: Literal[VariableType.CATEGORICAL],
     significance_type: SignificanceType,
-) -> SignificanceCategoricalCategorical:
-    ...  # pragma: no cover
+) -> SignificanceCategoricalCategorical: ...  # pragma: no cover
 
 
 @validate_call
