@@ -43,11 +43,11 @@ jobs:
             id: get-version
             run: |
               git fetch --prune --unshallow
-              VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+              VERSION=$(uv version --short)
               echo "Head branch version: $VERSION"
               echo "head_branch_version=$VERSION" >> $GITHUB_OUTPUT
               git checkout ${{ github.base_ref }}
-              VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+              VERSION=$(uv version --short)
               echo "Base branch version: $VERSION"
               echo "base_branch_version=$VERSION" >> $GITHUB_OUTPUT
           - name: Compare versions
