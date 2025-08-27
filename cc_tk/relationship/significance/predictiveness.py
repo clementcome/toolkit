@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, Field, validate_call
 from pydantic.config import ConfigDict
-from scipy.stats import norm
 from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import make_pipeline
@@ -29,14 +28,14 @@ def estimate_pvalue(
     statistic_array: np.ndarray,
     kind: Literal["both", "left", "right"] = "both",
 ) -> float:
-    """Estimate the pvalue of a statistic.
+    """Estimate the pvalue of a statistic using empirical bootstrap approach.
 
     Parameters
     ----------
     statistic_value : float
         Value of the statistic
     statistic_array : np.ndarray
-        Array of the statistic
+        Array of bootstrap statistics under null hypothesis
     kind : Literal["both", "left", "right"], optional
         Tail-kind of the test:
             - "both" : two-sided test
@@ -47,21 +46,35 @@ def estimate_pvalue(
     Returns
     -------
     float
-        Pvalue estimation
+        Empirical pvalue estimation
+
+    Notes
+    -----
+    This function calculates the empirical p-value by counting the proportion
+    of bootstrap statistics that are more extreme than the observed statistic.
+    A continuity correction is applied by adding 1 to both numerator and
+    denominator to avoid p-values of exactly 0.
 
     """
-    cdf_value = norm.cdf(
-        statistic_value,
-        loc=statistic_array.mean(),
-        scale=statistic_array.std(ddof=1),
-    )
-    pvalue_estimation = (
-        cdf_value
-        if (kind == "left")
-        else (1 - cdf_value)
-        if (kind == "right")
-        else 2 * min(1 - cdf_value, cdf_value)
-    )
+    n_bootstrap = len(statistic_array)
+    
+    if kind == "left":
+        # Left tail: count how many bootstrap stats are <= observed statistic
+        n_extreme = np.sum(statistic_array <= statistic_value)
+    elif kind == "right":
+        # Right tail: count how many bootstrap stats are >= observed statistic
+        n_extreme = np.sum(statistic_array >= statistic_value)
+    else:  # kind == "both"
+        # Two-sided: count how many bootstrap stats are more extreme in either direction
+        # More extreme means further from the median than the observed statistic
+        median_bootstrap = np.median(statistic_array)
+        distance_observed = abs(statistic_value - median_bootstrap)
+        distances_bootstrap = np.abs(statistic_array - median_bootstrap)
+        n_extreme = np.sum(distances_bootstrap >= distance_observed)
+    
+    # Apply continuity correction to avoid p-value of exactly 0
+    pvalue_estimation = (n_extreme + 1) / (n_bootstrap + 1)
+    
     return pvalue_estimation
 
 

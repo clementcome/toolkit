@@ -13,7 +13,6 @@ from cc_tk.relationship.significance.predictiveness import (
     estimate_pvalue,
 )
 from pydantic import ValidationError
-from scipy.stats import norm
 from sklearn.linear_model import LinearRegression
 from tests.relationship.significance.utils import SignificanceTestSuite
 
@@ -22,15 +21,19 @@ class TestEstimatePvalue:
     @pytest.mark.parametrize(
         "statistic_value, statistic_array, kind, expected",
         [
-            (0.0, np.array([0, -1, 1]), "both", 1.0),
-            (0.0, np.array([0, -1, 1]), "left", 0.5),
-            (0.0, np.array([0, -1, 1]), "right", 0.5),
-            (1.0, np.array([0, -1, 1]), "right", 1 - norm.cdf(1.0)),
-            (-1.0, np.array([0, -1, 1]), "both", 2 * norm.cdf(-1.0)),
+            # For empirical approach: count proportion of bootstrap stats more extreme
+            # Array [0, -1, 1] has median 0
+            (0.0, np.array([0, -1, 1]), "both", 1.0),  # All values are at median distance
+            (0.0, np.array([0, -1, 1]), "left", 3/4),  # 2 values <= 0.0, with continuity correction: (2+1)/(3+1)
+            (0.0, np.array([0, -1, 1]), "right", 3/4), # 2 values >= 0.0, with continuity correction: (2+1)/(3+1)
+            (1.0, np.array([0, -1, 1]), "right", 2/4), # 1 value >= 1.0, with continuity correction: (1+1)/(3+1)
+            (-1.0, np.array([0, -1, 1]), "left", 2/4), # 1 value <= -1.0, with continuity correction: (1+1)/(3+1)
+            (2.0, np.array([0, -1, 1]), "right", 1/4), # 0 values >= 2.0, with continuity correction: (0+1)/(3+1)
         ],
     )
     def test_estimate_pvalue(self, statistic_value, statistic_array, kind, expected):
-        assert estimate_pvalue(statistic_value, statistic_array, kind) == expected
+        result = estimate_pvalue(statistic_value, statistic_array, kind)
+        assert result == pytest.approx(expected, abs=1e-10)
 
     def test_estimate_pvalue_wrong_kind(self):
         with pytest.raises(ValidationError, match="kind"):
@@ -112,7 +115,7 @@ class TestPredictivenessSignificance:
         feature_values, target_values = x_y
         output = predictiveness_significance._evaluate(feature_values, target_values)
         assert isinstance(output, SignificanceOutput)
-        assert output.pvalue == pytest.approx(0.0, abs=1e-3)
+        assert output.pvalue == pytest.approx(0.01, abs=1e-2)  # Small p-value for perfect correlation
         assert isinstance(output.influence, pd.Series)
         assert output.influence.empty
         assert isinstance(output.statistic, float)
@@ -173,7 +176,7 @@ class TestPredictivenessNumericNumeric(SignificanceTestSuite):
     wrong_values_1_from_index = pd.Series([1, 2, 3])
     expected_influence = pd.Series()
     expected_statistic = 1.0
-    expected_pvalue = 0.0
+    expected_pvalue = 0.01  # Small p-value for significant predictiveness
 
 
 class TestPredictivenessCategoricalNumeric(SignificanceTestSuite):
@@ -185,7 +188,7 @@ class TestPredictivenessCategoricalNumeric(SignificanceTestSuite):
     wrong_values_1_from_index = pd.Series(["A", "B", "C"])
     expected_influence = pd.Series()
     expected_statistic = 1.0
-    expected_pvalue = 0.0
+    expected_pvalue = 0.01  # Small p-value for significant predictiveness
 
 
 class TestPredictivenessNumericCategorical(SignificanceTestSuite):
@@ -197,7 +200,7 @@ class TestPredictivenessNumericCategorical(SignificanceTestSuite):
     wrong_values_1_from_index = pd.Series([1, 2, 3])
     expected_influence = pd.Series()
     expected_statistic = 1.0
-    expected_pvalue = 0.0
+    expected_pvalue = 0.01  # Small p-value for significant predictiveness
 
 
 class TestPredictivenessCategoricalCategorical(SignificanceTestSuite):
@@ -209,4 +212,4 @@ class TestPredictivenessCategoricalCategorical(SignificanceTestSuite):
     wrong_values_1_from_index = pd.Series(["A", "B", "C"])
     expected_influence = pd.Series()
     expected_statistic = 1.0
-    expected_pvalue = 0.0
+    expected_pvalue = 0.01  # Small p-value for significant predictiveness
