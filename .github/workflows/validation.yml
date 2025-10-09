@@ -28,7 +28,7 @@ jobs:
     - name: Install dependencies and run tests
       run: |
         uv sync
-        uv run pytest tests/plot/ tests/relationship/ -v
+        uv run pytest
 
   lint:
     runs-on: ubuntu-latest
