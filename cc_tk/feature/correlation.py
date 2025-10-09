@@ -2,6 +2,7 @@
 
 import logging
 from collections import defaultdict
+from numbers import Integral, Real
 from typing import Any, Dict, List, Literal
 
 import matplotlib.pyplot as plt
@@ -12,7 +13,11 @@ from scipy.cluster import hierarchy
 from scipy.spatial.distance import squareform
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.decomposition import PCA
-from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
+from sklearn.utils._param_validation import Interval, StrOptions
+from sklearn.utils.validation import (
+    check_is_fitted,
+    validate_data,
+)
 
 from cc_tk.util.types import ArrayLike1D, ArrayLike2D
 
@@ -20,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 # pylint: disable=W0201
-class CorrelationToTarget(BaseEstimator, TransformerMixin):
+class CorrelationToTarget(TransformerMixin, BaseEstimator):
     """Select columns with correlation to target above a threshold.
 
     Parameters
@@ -30,6 +35,10 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
         Default is 0.1.
 
     """
+
+    _parameter_constraints = {
+        "threshold": [Interval(Real, 0, 1, closed="both")],
+    }
 
     def __init__(self, threshold: float = 0.1) -> None:
         """Initialize the transformer.
@@ -58,7 +67,9 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
             The target.
 
         """
-        features_, y = check_X_y(features, y, y_numeric=True)
+        self._validate_params()
+        features_, y = validate_data(self, features, y, y_numeric=True)
+        # features_, y = check_X_y(features, y, y_numeric=True)
         self.n_features_in_ = features_.shape[1]
         self._corr = np.corrcoef(features_.T, y)[-1, :-1]
         self.mask_selection_ = abs(self._corr) > self.threshold
@@ -104,7 +115,7 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
 
         """
         check_is_fitted(self, ["mask_selection_", "n_features_in_"])
-        features = check_array(features)
+        features = validate_data(self, features, reset=False)
         if features.shape[1] != self.n_features_in_:
             raise ValueError(
                 "Shape of input is different from what was seen in `fit`"
@@ -145,8 +156,14 @@ class CorrelationToTarget(BaseEstimator, TransformerMixin):
 
 
 # pylint: disable=W0201
-class ClusteringCorrelation(BaseEstimator, TransformerMixin):
+class ClusteringCorrelation(TransformerMixin, BaseEstimator):
     """Feature selector based on Clustering of correlations."""
+
+    _parameter_constraints = {
+        "threshold": [Interval(Real, 0, 1, closed="both")],
+        "summary_method": [StrOptions({"first", "pca"})],
+        "n_variables_by_cluster": [Interval(Integral, 1, None, closed="left")],
+    }
 
     def __init__(
         self,
@@ -180,11 +197,6 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
 
         """
         self.threshold = threshold
-        if summary_method not in ["first", "pca"]:
-            raise ValueError(
-                "summary_method should be either 'first' or 'pca', "
-                f"got {summary_method}"
-            )
         self.summary_method = summary_method
         self.n_variables_by_cluster = n_variables_by_cluster
 
@@ -199,7 +211,7 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
             Target, by default None
 
         """
-        features_, y = check_X_y(features, y, ensure_min_features=2)
+        features_, y = validate_data(self, features, y, ensure_min_features=2)
         self.n_features_in_ = features_.shape[1]
         if isinstance(features, pd.DataFrame):
             self._columns = features.columns
@@ -270,8 +282,10 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
             Transformed features with feature selection
 
         """
-        features_ = check_array(features)
         check_is_fitted(self, ["clusters_col_", "n_features_in_"])
+        features_ = validate_data(
+            self, features, ensure_min_features=2, reset=False
+        )
         if features_.shape[1] != self.n_features_in_:
             raise ValueError(
                 "Shape of input is different from what was seen in `fit`"
@@ -400,8 +414,12 @@ class ClusteringCorrelation(BaseEstimator, TransformerMixin):
         return clusters_col
 
 
-class PairwiseCorrelationDrop(BaseEstimator, TransformerMixin):
+class PairwiseCorrelationDrop(TransformerMixin, BaseEstimator):
     """Scikit-learn like estimator to deal with pair-wise correlation."""
+
+    _parameter_constraints = {
+        "threshold": [Interval(Real, 0, 1, closed="both")],
+    }
 
     def __init__(self, threshold: float = 0.9) -> None:
         """Implement the variable selection based on pair-wise correlation.
@@ -441,8 +459,8 @@ class PairwiseCorrelationDrop(BaseEstimator, TransformerMixin):
             Fitted transformer
 
         """
-        features_, y = check_X_y(
-            features, y, ensure_min_features=2, ensure_min_samples=2
+        features_, y = validate_data(
+            self, features, y, ensure_min_features=2, ensure_min_samples=2
         )
         self.n_features_in_ = features_.shape[1]
         self.mask_selection_ = self.compute_mask_selection(
@@ -478,8 +496,10 @@ class PairwiseCorrelationDrop(BaseEstimator, TransformerMixin):
             of columns in the training data.
 
         """
-        features = check_array(features, ensure_min_features=2)
         check_is_fitted(self, ["mask_selection_", "n_features_in_"])
+        features = validate_data(
+            self, features, ensure_min_features=2, reset=False
+        )
         if features.shape[1] != self.n_features_in_:
             raise ValueError(
                 "Shape of input is different from what was seen in `fit`"
