@@ -3,7 +3,7 @@
 from typing import Tuple
 
 import pandas as pd
-import pandera as pa
+import pandera.pandas as pa
 
 from cc_tk.relationship.schema import (
     OnlyCategoricalSchema,
