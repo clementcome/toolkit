@@ -7,7 +7,7 @@ packages = ["cc_tk"]
 
 [project]
 name = "clementcome-toolkit"
-version = "0.5.0"
+version = "0.6.0"
 description = "My data science toolkit."
 authors = [
     {name = "Clément Côme", email = "clement.come98@gmail.com"}
