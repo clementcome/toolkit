@@ -211,7 +211,10 @@ class ClusteringCorrelation(TransformerMixin, BaseEstimator):
             Target, by default None
 
         """
-        features_, y = validate_data(self, features, y, ensure_min_features=2)
+        if y is not None:
+            features_, y = validate_data(self, features, y, ensure_min_features=2)
+        else:
+            features_ = validate_data(self, features, y, ensure_min_features=2)
         self.n_features_in_ = features_.shape[1]
         if isinstance(features, pd.DataFrame):
             self._columns = features.columns
@@ -459,9 +462,14 @@ class PairwiseCorrelationDrop(TransformerMixin, BaseEstimator):
             Fitted transformer
 
         """
-        features_, y = validate_data(
-            self, features, y, ensure_min_features=2, ensure_min_samples=2
-        )
+        if y is not None:
+            features_, y = validate_data(
+                self, features, y, ensure_min_features=2, ensure_min_samples=2
+            )
+        else:
+            features_ = validate_data(
+                self, features, y, ensure_min_features=2, ensure_min_samples=2
+            )
         self.n_features_in_ = features_.shape[1]
         self.mask_selection_ = self.compute_mask_selection(
             features_, self.threshold
